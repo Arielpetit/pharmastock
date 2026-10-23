@@ -13,7 +13,7 @@
         <input v-model="search" type="search" :placeholder="t('Search by name…')"
           class="h-11 w-full rounded-full border border-line bg-card pl-11 pr-4 text-[14px] text-ink shadow-card outline-none transition placeholder:text-ink-faint focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
       </label>
-      <div class="grid grid-cols-2 gap-2.5 lg:flex">
+      <div class="grid gap-2.5 sm:grid-cols-2 lg:flex">
         <Select v-model="category" :options="categoryOptions" class="lg:w-52" variant="outline" size="md" />
         <FormControl v-model="expiryBefore" type="date" format="D MMM YYYY" variant="outline" size="md" :placeholder="t('Expires before…')" class="lg:w-48" />
       </div>
@@ -40,7 +40,7 @@
     </div>
     <template v-else>
       <!-- desktop table -->
-      <div class="surface hidden overflow-hidden md:block">
+      <div class="surface hidden overflow-hidden lg:block">
         <table class="w-full text-left">
           <thead>
             <tr class="border-b border-line text-[12px] font-medium text-ink-mute">
@@ -49,7 +49,7 @@
               <th class="px-3 py-3.5 font-medium">{{ t('Nearest expiry') }}</th>
               <th class="hidden px-3 py-3.5 font-medium xl:table-cell">{{ t('Location') }}</th>
               <th class="px-3 py-3.5 font-medium">{{ t('Status') }}</th>
-              <th class="w-px py-3.5 pl-3 pr-6" />
+              <th class="w-px py-3.5 pl-1 pr-6" />
             </tr>
           </thead>
           <tbody>
@@ -72,8 +72,7 @@
               </td>
               <td class="px-3 py-4"><StatusBadge :status="m.status" /></td>
               <td class="py-4 pl-3 pr-6">
-                <Btn size="sm" icon="lucide-plus" :label="t('Stock')" class="opacity-0 transition group-hover:opacity-100 focus:opacity-100"
-                  @click.stop="openAddStock(m.code)" />
+                <Btn size="sm" icon="lucide-plus" :label="t('Stock')" @click.stop="openAddStock(m.code)" />
               </td>
             </tr>
           </tbody>
@@ -81,8 +80,8 @@
       </div>
 
       <!-- mobile cards -->
-      <ul class="space-y-2.5 md:hidden">
-        <li v-for="m in paged.items.value" :key="m.code" class="surface p-4 active:bg-paper" @click="open(m)">
+      <ul class="grid gap-2.5 sm:grid-cols-2 lg:hidden">
+        <li v-for="m in paged.items.value" :key="m.code" class="surface cursor-pointer p-4 active:bg-paper" @click="open(m)">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <div class="truncate text-[15px] font-semibold text-ink">{{ m.name }}</div>
@@ -99,6 +98,10 @@
               <BlisterGauge class="mt-2" :stock="m.stock" :minimum="m.minimum" />
             </div>
             <ExpiryChip :date="m.nearest_expiry" align="end" />
+          </div>
+          <div class="mt-3.5 flex items-center justify-between gap-3 border-t border-line/70 pt-3">
+            <span class="truncate text-[12px] text-ink-mute">{{ m.location || '' }}</span>
+            <Btn size="sm" icon="lucide-plus" :label="t('Add stock')" @click.stop="openAddStock(m.code)" />
           </div>
         </li>
       </ul>

@@ -2,7 +2,7 @@
   <Sheet v-model:open="ui.medicine.open" :title="editing ? t('Edit medicine') : t('Add a new medicine')"
     :message="editing ? '' : t('Add the medicine to your list and, if you have it, its first stock.')"
     icon="lucide-pill" theme="green" size="2xl">
-    <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
+    <form class="grid grid-cols-2 items-start gap-x-3 gap-y-4 sm:gap-x-4" @submit.prevent="save">
       <FormControl variant="outline" v-model="form.name" class="col-span-2" :label="t('Medicine name')" required size="lg"
         :placeholder="t('e.g. Paracetamol 500mg')" />
       <FormControl variant="outline" v-model="form.category" type="select" :options="opt(session.options.categories)" :label="t('Category')"
@@ -24,9 +24,10 @@
         </div>
         <FormControl variant="outline" v-model="form.qty" type="number" min="0" :label="t('Quantity received')" size="lg" />
         <FormControl variant="outline" v-model="form.price" type="number" min="0" :label="t('Price per unit ({0})', session.currency)" size="lg" />
-        <FormControl variant="outline" v-model="form.date" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Date received')" size="lg" :max="today()" />
+        <FormControl variant="outline" v-model="form.date" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Date received')" size="lg" :max="today()"
+          class="col-span-2 sm:col-span-1" />
         <FormControl variant="outline" v-model="form.expiry" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Expiry date')" size="lg" :min="form.date"
-          :required="Number(form.qty) > 0" />
+          :required="Number(form.qty) > 0" class="col-span-2 sm:col-span-1" />
       </template>
       <ErrorMessage class="col-span-2" :message="error" />
     </form>

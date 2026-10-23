@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen md:flex">
+  <div class="min-h-screen lg:flex">
     <!-- desktop sidebar, folds to an icon rail -->
-    <aside class="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-card transition-[width] duration-200 md:flex"
+    <aside class="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-line bg-card transition-[width] duration-200 lg:flex"
       :class="folded ? 'w-[76px]' : 'w-[248px]'">
       <div class="flex items-center pb-6 pt-6" :class="folded ? 'flex-col gap-3 px-3' : 'justify-between pl-6 pr-3'">
         <RouterLink to="/" :aria-label="t('Dashboard')"><Logo :mark-only="folded" :subtitle="session.siteName" /></RouterLink>
@@ -55,7 +55,7 @@
     <div class="flex min-w-0 flex-1 flex-col">
       <!-- top bar -->
       <header class="sticky top-0 z-20 flex h-[60px] items-center gap-2 bg-paper/85 px-4 backdrop-blur-md md:h-16 md:px-8 lg:px-10">
-        <RouterLink to="/" class="md:hidden" :aria-label="t('Dashboard')"><Logo mark-class="size-9" /></RouterLink>
+        <RouterLink to="/" class="lg:hidden" :aria-label="t('Dashboard')"><Logo mark-class="size-9" /></RouterLink>
         <div class="flex-1" />
 
         <button v-if="net.outbox.length" class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium"
@@ -77,12 +77,12 @@
         </button>
 
         <!-- phone: the bell opens the Notifications page; desktop: a popover with a link to it -->
-        <RouterLink to="/notifications" class="relative flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink-soft shadow-card md:hidden"
+        <RouterLink to="/notifications" class="relative flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink-soft shadow-card lg:hidden"
           :aria-label="t('Notifications')">
           <span class="lucide-bell size-[17px]" />
           <span v-if="alertCount" class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-alert px-1 text-[10px] font-bold text-on-ink ring-2 ring-paper">{{ alertCount > 9 ? '9+' : alertCount }}</span>
         </RouterLink>
-        <div class="hidden md:block">
+        <div class="hidden lg:block">
         <Popover side="bottom" align="end">
           <template #trigger>
             <button class="relative flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink-soft shadow-card transition hover:text-ink"
@@ -107,7 +107,7 @@
         </Popover>
         </div>
 
-        <div class="md:hidden">
+        <div class="lg:hidden">
         <Dropdown :options="userMenu" align="end">
           <template #default>
             <button class="rounded-full" :aria-label="t('My account')"><Initials :name="session.user.full_name" /></button>
@@ -121,13 +121,13 @@
         {{ t('You are offline. You see the last saved data, and new stock movements are kept and sent later.') }}
       </div>
 
-      <main class="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-32 pt-3 md:px-8 md:pb-14 md:pt-5 lg:px-10">
+      <main class="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-32 pt-3 md:px-8 lg:pb-14 md:pt-5 lg:px-10">
         <slot />
       </main>
     </div>
 
     <!-- phone tab bar -->
-    <nav class="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-30 md:hidden">
+    <nav class="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] lg:hidden">
       <div class="grid grid-cols-5 items-center rounded-[24px] border border-line bg-card/95 px-1 py-1 shadow-lift backdrop-blur">
         <RouterLink v-for="item in mobileNav" :key="item.to" :to="item.to" custom v-slot="{ navigate, isActive, isExactActive }">
           <a v-if="item.primary" :href="'/pharmacy' + item.to" class="flex flex-col items-center" :aria-label="t(item.short)" @click="navigate">

@@ -37,15 +37,31 @@
       <div class="ml-auto pb-2 text-[13px] text-ink-mute tabular">{{ t('{0} rows', current.length) }}</div>
     </div>
 
-    <div class="surface overflow-x-auto">
+    <div class="surface overflow-hidden">
       <div v-if="loading" class="p-12 text-center"><LoadingIndicator class="mx-auto size-5 text-ink-mute" /></div>
       <EmptyState v-else-if="!current.length" icon="lucide-file-search" :title="t('Nothing to show')" :text="t('Change the filters to see more.')" />
 
-      <table v-else-if="tab === 'movements'" class="w-full min-w-[760px] text-left text-[13.5px]">
+      <template v-else-if="tab === 'movements'">
+      <ul class="divide-y divide-line/70 lg:hidden">
+        <li v-for="(r, i) in paged.items.value" :key="i" class="flex items-center gap-3 px-4 py-3.5">
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-full" :class="r.direction === 'in' ? 'bg-apo-soft text-apo' : 'bg-paper-deep text-ink-soft'">
+            <span :class="r.direction === 'in' ? 'lucide-arrow-down-to-line' : 'lucide-arrow-up-from-line'" class="size-4" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-[14px] font-semibold text-ink">{{ r.medicine_name }}</div>
+            <div class="mt-0.5 truncate text-[12px] text-ink-mute">{{ date(r.date) }} · {{ t(r.reason || '') }}<template v-if="r.recipient"> · {{ r.recipient }}</template></div>
+          </div>
+          <div class="shrink-0 text-right">
+            <div class="font-display text-[19px] leading-none tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">{{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</div>
+            <div class="mt-1 text-[11px] text-ink-faint tabular">{{ t('Balance') }} {{ num(r.balance) }}</div>
+          </div>
+        </li>
+      </ul>
+      <table class="hidden w-full text-left lg:table text-[13.5px]">
         <thead><tr class="border-b border-line text-[12px] text-ink-mute">
           <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Date') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Medicine') }}</th>
           <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Reason') }}</th>
-          <th class="px-3 py-3.5 font-medium">{{ t('Lot') }}</th><th class="px-3 py-3.5 font-medium">{{ t('By') }}</th>
+          <th class="hidden px-3 py-3.5 font-medium xl:table-cell">{{ t('Lot') }}</th><th class="hidden px-3 py-3.5 font-medium xl:table-cell">{{ t('By') }}</th>
           <th class="py-3.5 pl-3 pr-6 text-right font-medium">{{ t('Balance') }}</th></tr></thead>
         <tbody>
           <tr v-for="(r, i) in paged.items.value" :key="i" class="border-b border-line/70 last:border-0">
@@ -54,18 +70,32 @@
             <td class="px-3 py-3 text-right font-display text-[17px] tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">
               {{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</td>
             <td class="px-3 py-3 text-ink-soft">{{ t(r.reason || '') }}<span v-if="r.recipient" class="text-ink-mute"> · {{ r.recipient }}</span></td>
-            <td class="font-label px-3 py-3 text-[11.5px] text-ink-mute">{{ r.batch || '—' }}</td>
-            <td class="px-3 py-3 text-ink-soft">{{ r.by }}</td>
+            <td class="font-label hidden px-3 py-3 text-[11.5px] text-ink-mute xl:table-cell">{{ r.batch || '—' }}</td>
+            <td class="hidden px-3 py-3 text-ink-soft xl:table-cell">{{ r.by }}</td>
             <td class="py-3 pl-3 pr-6 text-right text-ink-mute tabular">{{ num(r.balance) }}</td>
           </tr>
         </tbody>
       </table>
+      </template>
 
-      <table v-else-if="tab === 'expiry'" class="w-full min-w-[680px] text-left text-[13.5px]">
+      <template v-else-if="tab === 'expiry'">
+      <ul class="divide-y divide-line/70 lg:hidden">
+        <li v-for="r in paged.items.value" :key="r.batch" class="flex items-center gap-3 px-4 py-3.5" :class="r.expired && 'bg-alert-soft/40'">
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-[14px] font-semibold text-ink">{{ r.medicine_name }}</div>
+            <div class="font-label mt-0.5 truncate text-[11px] text-ink-mute">{{ r.batch }} · {{ date(r.expiry_date) }}</div>
+          </div>
+          <div class="shrink-0 text-right">
+            <ExpiryChip :date="r.expiry_date" :days="r.days_left" :show-date="false" align="end" />
+            <div class="mt-1 text-[12px] text-ink-mute"><span class="font-display text-[16px] text-ink tabular">{{ num(r.qty) }}</span> {{ t(r.unit) }}</div>
+          </div>
+        </li>
+      </ul>
+      <table class="hidden w-full text-left text-[13.5px] lg:table">
         <thead><tr class="border-b border-line text-[12px] text-ink-mute">
           <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Medicine') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Lot') }}</th>
           <th class="px-3 py-3.5 font-medium">{{ t('Expiry date') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Time left') }}</th>
-          <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Location') }}</th></tr></thead>
+          <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="hidden py-3.5 pl-3 pr-6 font-medium xl:table-cell">{{ t('Location') }}</th></tr></thead>
         <tbody>
           <tr v-for="r in paged.items.value" :key="r.batch" class="border-b border-line/70 last:border-0" :class="r.expired && 'bg-alert-soft/40'">
             <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.medicine_name }}</td>
@@ -73,20 +103,35 @@
             <td class="px-3 py-3 text-ink-soft">{{ date(r.expiry_date) }}</td>
             <td class="px-3 py-3"><ExpiryChip :date="r.expiry_date" :days="r.days_left" :show-date="false" /></td>
             <td class="px-3 py-3 text-right"><span class="font-display text-[17px] text-ink tabular">{{ num(r.qty) }}</span> <span class="text-ink-mute">{{ t(r.unit) }}</span></td>
-            <td class="py-3 pl-3 pr-6"><span v-if="r.location" class="font-label rounded-md bg-paper-deep px-2 py-1 text-[11.5px] text-ink-soft">{{ r.location }}</span><span v-else class="text-ink-faint">—</span></td>
+            <td class="hidden py-3 pl-3 pr-6 xl:table-cell"><span v-if="r.location" class="font-label rounded-md bg-paper-deep px-2 py-1 text-[11.5px] text-ink-soft">{{ r.location }}</span><span v-else class="text-ink-faint">—</span></td>
           </tr>
         </tbody>
       </table>
+      </template>
 
-      <table v-else class="w-full min-w-[680px] text-left text-[13.5px]">
+      <template v-else>
+      <ul class="divide-y divide-line/70 lg:hidden">
+        <li v-for="r in paged.items.value" :key="r.code" class="flex items-center gap-3 px-4 py-3.5">
+          <div class="min-w-0 flex-1">
+            <div class="truncate text-[14px] font-semibold text-ink">{{ r.name }}</div>
+            <div class="mt-0.5 truncate text-[12px] text-ink-mute">{{ t(r.category) }} · {{ t('Minimum') }} {{ num(r.minimum) }}</div>
+            <BlisterGauge class="mt-2" :stock="r.stock" :minimum="r.minimum" />
+          </div>
+          <div class="shrink-0 text-right">
+            <div><span class="font-display text-[20px] leading-none tabular text-ink">{{ num(r.stock) }}</span> <span class="text-[11px] text-ink-mute">{{ t(r.unit) }}</span></div>
+            <StatusBadge class="mt-1.5" :status="r.status" />
+          </div>
+        </li>
+      </ul>
+      <table class="hidden w-full text-left text-[13.5px] lg:table">
         <thead><tr class="border-b border-line text-[12px] text-ink-mute">
-          <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Medicine') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Category') }}</th>
+          <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Medicine') }}</th><th class="hidden px-3 py-3.5 font-medium xl:table-cell">{{ t('Category') }}</th>
           <th class="px-3 py-3.5 font-medium">{{ t('In stock') }}</th><th class="px-3 py-3.5 text-right font-medium">{{ t('Minimum') }}</th>
           <th class="px-3 py-3.5 font-medium">{{ t('Nearest expiry') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Status') }}</th></tr></thead>
         <tbody>
           <tr v-for="r in paged.items.value" :key="r.code" class="border-b border-line/70 last:border-0">
             <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.name }}</td>
-            <td class="px-3 py-3 text-ink-soft">{{ t(r.category) }}</td>
+            <td class="hidden px-3 py-3 text-ink-soft xl:table-cell">{{ t(r.category) }}</td>
             <td class="px-3 py-3">
               <span class="font-display text-[17px] text-ink tabular">{{ num(r.stock) }}</span> <span class="text-ink-mute">{{ t(r.unit) }}</span>
               <BlisterGauge class="mt-1.5" :stock="r.stock" :minimum="r.minimum" />
@@ -97,6 +142,7 @@
           </tr>
         </tbody>
       </table>
+      </template>
     </div>
     <Pager v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
   </div>

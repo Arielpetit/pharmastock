@@ -3,8 +3,8 @@
     <!-- brand panel -->
     <section class="relative overflow-hidden bg-[#173F33] text-white lg:min-h-screen">
       <div class="absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,#2c6c58_0%,transparent_60%),radial-gradient(90%_70%_at_100%_100%,#123329_0%,transparent_70%)]" />
-      <BlisterArt class="pointer-events-none absolute -right-[210px] top-1/2 hidden h-[72%] -translate-y-1/2 rotate-[-12deg] lg:block xl:-right-[150px] 2xl:-right-[60px]" />
-      <div class="absolute inset-y-0 left-0 hidden w-2/3 bg-gradient-to-r from-[#173F33] via-[#173F33]/80 to-transparent lg:block" />
+      <BlisterArt class="pointer-events-none absolute -right-[210px] top-1/2 hidden h-[72%] -translate-y-1/2 rotate-[-12deg] xl:block xl:-right-[150px] 2xl:-right-[60px]" />
+      <div class="absolute inset-y-0 left-0 hidden w-2/3 bg-gradient-to-r from-[#173F33] via-[#173F33]/80 to-transparent xl:block" />
       <div class="relative flex h-full flex-col justify-between gap-10 px-6 py-7 sm:px-10 lg:px-14 lg:py-12">
         <Logo inverted mark-class="size-11 rounded-[12px] ring-1 ring-white/20" />
         <div class="max-w-[400px] pb-2 lg:pb-0">

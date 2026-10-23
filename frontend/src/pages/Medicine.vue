@@ -23,8 +23,8 @@
       </PageHeader>
 
       <!-- shelf label -->
-      <section class="surface rise grid overflow-hidden md:grid-cols-[1.3fr_1fr_1fr_1fr]">
-        <div class="border-b border-line p-6 md:border-b-0 md:border-r">
+      <section class="surface rise grid overflow-hidden xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div class="border-b border-line p-6 xl:border-b-0 xl:border-r">
           <p class="eyebrow">{{ t('In stock') }}</p>
           <div class="mt-3 flex items-baseline gap-2">
             <span class="font-display text-[56px] leading-none tabular" :class="m.is_out ? 'text-alert' : m.is_low ? 'text-warn' : 'text-ink'">{{ num(m.stock) }}</span>
@@ -32,14 +32,14 @@
           </div>
           <BlisterGauge class="mt-4" :stock="m.stock" :minimum="m.minimum" :cells="10" size="lg" />
         </div>
-        <div class="grid grid-cols-3 md:contents">
-          <div class="border-r border-line p-5 md:p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 xl:contents">
+          <div class="border-b border-line p-5 sm:border-b-0 sm:border-r md:p-6">
             <p class="eyebrow">{{ t('Minimum') }}</p>
             <p class="mt-3 font-display text-[30px] leading-none text-ink tabular">{{ num(m.minimum) }}</p>
             <p class="mt-2 text-[12.5px]" :class="m.is_low || m.is_out ? 'text-warn' : 'text-ink-mute'">
               {{ m.is_low || m.is_out ? t('Below minimum — request more') : t('Alert when stock reaches it') }}</p>
           </div>
-          <div class="border-r border-line p-5 md:p-6">
+          <div class="border-b border-line p-5 sm:border-b-0 sm:border-r md:p-6">
             <p class="eyebrow">{{ t('Nearest expiry') }}</p>
             <p class="mt-3 font-display text-[30px] leading-none text-ink">{{ m.nearest_expiry ? date(m.nearest_expiry, { month: 'short', year: 'numeric' }) : '—' }}</p>
             <ExpiryChip v-if="m.nearest_expiry" class="mt-2" :date="m.nearest_expiry" :show-date="false" />
