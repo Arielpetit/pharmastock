@@ -192,7 +192,6 @@ const nav = computed(() => [
   { to: '/give-out', label: 'Give out stock', icon: 'lucide-hand-heart' },
   { to: '/requests', label: 'Stock requests', icon: 'lucide-clipboard-list', badge: pending.value || null },
   { to: '/reports', label: 'Reports', icon: 'lucide-chart-no-axes-column' },
-  { to: '/notifications', label: 'Notifications', icon: 'lucide-bell', badge: alertCount.value || null },
   ...(session.isAdmin ? [{ to: '/staff', label: 'Staff', icon: 'lucide-users-round' }] : []),
 ])
 
