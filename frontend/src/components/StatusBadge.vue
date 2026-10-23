@@ -10,9 +10,9 @@ import { t } from '@/i18n'
 
 const props = defineProps({ status: String })
 const green = { cls: 'bg-apo-soft text-apo-deep', dot: 'bg-apo-mid' }
-const amber = { cls: 'bg-warn-soft text-warn', dot: 'bg-[#d9973f]' }
+const amber = { cls: 'bg-warn-soft text-warn', dot: 'bg-warn-mid' }
 const red = { cls: 'bg-alert-soft text-alert', dot: 'bg-alert' }
-const blue = { cls: 'bg-[#E8EEF7] text-[#2F4E7A]', dot: 'bg-[#5B7DB1]' }
+const blue = { cls: 'bg-info-soft text-info', dot: 'bg-info' }
 const gray = { cls: 'bg-paper-deep text-ink-soft', dot: 'bg-ink-faint' }
 const STATUS = {
   ok: { ...green, label: 'In stock' },

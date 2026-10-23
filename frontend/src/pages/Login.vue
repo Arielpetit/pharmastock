@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-paper lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
     <!-- brand panel -->
-    <section class="relative overflow-hidden bg-apo-deep text-white lg:min-h-screen">
+    <section class="relative overflow-hidden bg-[#173F33] text-white lg:min-h-screen">
       <div class="absolute inset-0 bg-[radial-gradient(120%_80%_at_0%_0%,#2c6c58_0%,transparent_60%),radial-gradient(90%_70%_at_100%_100%,#123329_0%,transparent_70%)]" />
       <BlisterArt class="pointer-events-none absolute -right-[210px] top-1/2 hidden h-[72%] -translate-y-1/2 rotate-[-12deg] lg:block xl:-right-[150px] 2xl:-right-[60px]" />
-      <div class="absolute inset-y-0 left-0 hidden w-2/3 bg-gradient-to-r from-apo-deep via-apo-deep/80 to-transparent lg:block" />
+      <div class="absolute inset-y-0 left-0 hidden w-2/3 bg-gradient-to-r from-[#173F33] via-[#173F33]/80 to-transparent lg:block" />
       <div class="relative flex h-full flex-col justify-between gap-10 px-6 py-7 sm:px-10 lg:px-14 lg:py-12">
         <Logo inverted mark-class="size-11 rounded-[12px] ring-1 ring-white/20" />
         <div class="max-w-[400px] pb-2 lg:pb-0">
@@ -26,9 +26,9 @@
     <!-- form -->
     <section class="relative flex min-h-[70vh] flex-col lg:min-h-screen">
       <div class="flex justify-end p-5 sm:p-7">
-        <div class="flex items-center rounded-full border border-line bg-white p-0.5" role="group" :aria-label="t('Language')">
+        <div class="flex items-center rounded-full border border-line bg-card p-0.5" role="group" :aria-label="t('Language')">
           <button v-for="l in ['fr', 'en']" :key="l" class="rounded-full px-3 py-1 text-[11.5px] font-semibold uppercase tracking-wide transition"
-            :class="lang === l ? 'bg-ink text-white' : 'text-ink-mute hover:text-ink'" @click="setLanguage(l)">{{ l }}</button>
+            :class="lang === l ? 'bg-ink text-on-ink' : 'text-ink-mute hover:text-ink'" @click="setLanguage(l)">{{ l }}</button>
         </div>
       </div>
       <div class="flex flex-1 items-start justify-center px-6 pb-16 pt-4 sm:items-center sm:pt-0">
@@ -40,13 +40,13 @@
             <label class="block">
               <span class="mb-2 block text-[13px] font-semibold text-ink">{{ t('Email') }}</span>
               <input v-model="email" type="email" autocomplete="username" required :placeholder="t('you@clinic.cm')"
-                class="h-12 w-full rounded-[12px] border border-line bg-white px-4 text-[15px] text-ink shadow-card outline-none transition placeholder:text-ink-faint focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
+                class="h-12 w-full rounded-[12px] border border-line bg-card px-4 text-[15px] text-ink shadow-card outline-none transition placeholder:text-ink-faint focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
             </label>
             <label class="block">
               <span class="mb-2 block text-[13px] font-semibold text-ink">{{ t('Password') }}</span>
               <span class="relative block">
                 <input v-model="password" :type="show ? 'text' : 'password'" autocomplete="current-password" required
-                  class="h-12 w-full rounded-[12px] border border-line bg-white pl-4 pr-12 text-[15px] text-ink shadow-card outline-none transition focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
+                  class="h-12 w-full rounded-[12px] border border-line bg-card pl-4 pr-12 text-[15px] text-ink shadow-card outline-none transition focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
                 <button type="button" class="absolute right-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-ink-mute hover:bg-paper hover:text-ink"
                   :aria-label="show ? t('Hide password') : t('Show password')" @click="show = !show">
                   <span :class="show ? 'lucide-eye-off' : 'lucide-eye'" class="size-4" />

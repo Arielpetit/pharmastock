@@ -13,7 +13,7 @@
         <div class="flex items-start justify-between gap-3">
           <Initials :name="u.full_name" size="lg" />
           <span class="rounded-full px-2.5 py-1 text-[11.5px] font-semibold"
-            :class="u.role === 'Pharmacy Admin' ? 'bg-ink text-white' : 'bg-apo-soft text-apo-deep'">
+            :class="u.role === 'Pharmacy Admin' ? 'bg-ink text-on-ink' : 'bg-apo-soft text-apo-deep'">
             {{ u.role === 'Pharmacy Admin' ? t('Administrator') : t('Staff') }}
           </span>
         </div>
@@ -31,7 +31,7 @@
       </li>
     </ul>
 
-    <Dialog v-model:open="open" :title="form.existing ? t('Edit {0}', form.full_name) : t('Add a person')" icon="lucide-user-round" size="lg">
+    <Sheet v-model:open="open" :title="form.existing ? t('Edit {0}', form.full_name) : t('Add a person')" icon="lucide-user-round" size="lg">
       <form class="space-y-5" @submit.prevent="save">
         <FormControl v-model="form.full_name" :label="t('Full name')" required size="lg" variant="outline" />
         <FormControl v-model="form.email" type="email" :label="t('Email (used to log in)')" required size="lg" variant="outline" :disabled="form.existing" />
@@ -39,7 +39,7 @@
           <div class="mb-2 text-[13px] font-semibold text-ink">{{ t('Role') }}</div>
           <div class="grid gap-2 sm:grid-cols-2">
             <button v-for="r in roles" :key="r.value" type="button" class="rounded-[14px] border p-3.5 text-left transition"
-              :class="form.role === r.value ? 'border-apo/40 bg-apo-mist ring-1 ring-apo/30' : 'border-line bg-white hover:border-line-strong'"
+              :class="form.role === r.value ? 'border-apo/40 bg-apo-mist ring-1 ring-apo/30' : 'border-line bg-card hover:border-line-strong'"
               @click="form.role = r.value">
               <div class="text-[14px] font-semibold text-ink">{{ t(r.label) }}</div>
               <div class="mt-0.5 text-[12.5px] text-ink-mute">{{ t(r.text) }}</div>
@@ -55,18 +55,17 @@
         </p>
       </form>
       <template #actions>
-        <div class="flex w-full justify-end gap-2">
-          <Btn variant="ghost" :label="t('Cancel')" @click="open = false" />
+        <Btn variant="ghost" :label="t('Cancel')" @click="open = false" />
           <Btn variant="primary" :label="t('Save')" :loading="saving" @click="save" />
-        </div>
-      </template>
-    </Dialog>
+    </template>
+    </Sheet>
   </div>
 </template>
 
 <script setup>
+import Sheet from '@/components/Sheet.vue'
 import { onMounted, reactive, ref } from 'vue'
-import { Dialog, FormControl, toast } from 'frappe-ui'
+import { FormControl, toast } from 'frappe-ui'
 import Initials from '@/components/Initials.vue'
 import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'

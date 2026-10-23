@@ -7,7 +7,7 @@
       <div class="min-w-0">
         <div class="font-display text-[26px] leading-tight text-ink">{{ session.user.full_name }}</div>
         <div class="mt-0.5 truncate text-[13.5px] text-ink-mute">{{ session.user.email }}</div>
-        <span class="mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold" :class="session.isAdmin ? 'bg-ink text-white' : 'bg-apo-soft text-apo-deep'">
+        <span class="mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold" :class="session.isAdmin ? 'bg-ink text-on-ink' : 'bg-apo-soft text-apo-deep'">
           {{ session.isAdmin ? t('Pharmacy administrator') : t('Pharmacy staff') }}</span>
       </div>
     </section>
@@ -15,8 +15,18 @@
     <Panel class="mb-4" :title="t('Language')" padded>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="l in [{ v: 'fr', n: 'Français' }, { v: 'en', n: 'English' }]" :key="l.v" class="flex items-center justify-between rounded-[14px] border px-4 py-3.5 text-left text-[14px] font-semibold transition"
-          :class="lang === l.v ? 'border-apo/40 bg-apo-mist text-apo-deep ring-1 ring-apo/30' : 'border-line bg-white text-ink-soft hover:border-line-strong'"
+          :class="lang === l.v ? 'border-apo/40 bg-apo-mist text-apo-deep ring-1 ring-apo/30' : 'border-line bg-card text-ink-soft hover:border-line-strong'"
           @click="setLanguage(l.v)">{{ l.n }}<span v-if="lang === l.v" class="lucide-check size-4" /></button>
+      </div>
+    </Panel>
+
+    <Panel class="mb-4" :title="t('Appearance')" padded>
+      <div class="grid grid-cols-3 gap-2">
+        <button v-for="m in themes" :key="m.v" class="flex flex-col items-center gap-2 rounded-[14px] border px-3 py-3.5 text-[13px] font-semibold transition"
+          :class="themeMode === m.v ? 'border-apo/40 bg-apo-mist text-apo-deep ring-1 ring-apo/30' : 'border-line bg-card text-ink-soft hover:border-line-strong'"
+          @click="setTheme(m.v)">
+          <span :class="m.icon" class="size-5" />{{ t(m.label) }}
+        </button>
       </div>
     </Panel>
 
@@ -43,7 +53,7 @@
     <Panel :title="t('This device')" padded>
       <div class="flex items-center justify-between gap-3 text-[13.5px]">
         <span class="flex items-center gap-2 text-ink-soft">
-          <span class="size-1.5 rounded-full" :class="net.outbox.length ? 'bg-[#5B7DB1]' : 'bg-apo-mid'" />
+          <span class="size-1.5 rounded-full" :class="net.outbox.length ? 'bg-info' : 'bg-apo-mid'" />
           {{ net.outbox.length ? t('{0} change(s) waiting to be sent', net.outbox.length) : t('Everything is sent.') }}
         </span>
         <Btn size="sm" :label="t('Details')" @click="ui.sync.open = true" />
@@ -66,8 +76,14 @@ import Logo from '@/components/Logo.vue'
 import { net, post } from '@/api'
 import { lang, setLanguage, t } from '@/i18n'
 import { session, logout } from '@/session'
+import { setTheme, themeMode } from '@/theme'
 import { ui } from '@/ui'
 
+const themes = [
+  { v: 'light', label: 'Light', icon: 'lucide-sun' },
+  { v: 'dark', label: 'Dark', icon: 'lucide-moon' },
+  { v: 'system', label: 'Automatic', icon: 'lucide-smartphone' },
+]
 const pw = reactive({ old: '', new: '' })
 const pwError = ref('')
 const pwSaving = ref(false)

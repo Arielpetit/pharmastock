@@ -53,7 +53,7 @@
       </section>
 
       <div v-if="m.has_expired" class="mt-4 flex flex-wrap items-center gap-3 rounded-[18px] border border-alert/15 bg-alert-soft p-4 text-alert">
-        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/70"><span class="lucide-octagon-alert size-4" /></span>
+        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-card/70"><span class="lucide-octagon-alert size-4" /></span>
         <div class="min-w-0 flex-1 text-[13.5px]">
           <div class="font-semibold">{{ t('{0} {1} have expired', num(m.expired_qty), t(m.unit)) }}</div>
           <div class="text-alert/80">{{ t('Expired stock cannot be given to patients. Remove it from the shelf and record it as expired.') }}</div>
@@ -66,11 +66,11 @@
           <EmptyState v-if="!m.batches.length" icon="lucide-package-open" :title="t('No stock')" :text="t('Add stock when a delivery arrives.')" />
           <ul v-else class="space-y-2 px-4 pb-4">
             <li v-for="(b, i) in m.batches" :key="b.batch"
-              class="flex items-center gap-4 rounded-[14px] border px-4 py-3.5" :class="i === firstValid ? 'border-apo/25 bg-apo-mist' : b.expired ? 'border-alert/20 bg-alert-soft/50' : 'border-line bg-white'">
+              class="flex items-center gap-4 rounded-[14px] border px-4 py-3.5" :class="i === firstValid ? 'border-apo/25 bg-apo-mist' : b.expired ? 'border-alert/20 bg-alert-soft/50' : 'border-line bg-card'">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="font-label text-[13px] font-medium text-ink">{{ b.batch }}</span>
-                  <span v-if="i === firstValid" class="rounded-full bg-apo px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-white">{{ t('Give out first') }}</span>
+                  <span v-if="i === firstValid" class="rounded-full bg-apo px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-on-apo">{{ t('Give out first') }}</span>
                 </div>
                 <div class="font-label mt-1 text-[11.5px] uppercase text-ink-mute">{{ t('Exp') }} {{ b.expiry_date.slice(5, 7) }}/{{ b.expiry_date.slice(0, 4) }}</div>
               </div>
@@ -87,7 +87,7 @@
           <ol v-else class="relative px-5 pb-4">
             <li v-for="(x, i) in m.movements" :key="i" class="relative flex gap-4 pb-4 last:pb-1">
               <div class="flex flex-col items-center">
-                <span class="mt-1 size-2.5 shrink-0 rounded-full ring-4" :class="x.direction === 'in' ? 'bg-apo-mid ring-apo-soft' : 'bg-[#E3B27A] ring-warn-soft'" />
+                <span class="mt-1 size-2.5 shrink-0 rounded-full ring-4" :class="x.direction === 'in' ? 'bg-apo-mid ring-apo-soft' : 'bg-warn-mid ring-warn-soft'" />
                 <span v-if="i < m.movements.length - 1" class="mt-1 w-px flex-1 bg-line" />
               </div>
               <div class="flex min-w-0 flex-1 items-start justify-between gap-3">

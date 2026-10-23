@@ -7,16 +7,16 @@
       </template>
     </PageHeader>
 
-    <div class="mb-5 flex items-start gap-3 rounded-[16px] border border-line bg-white/60 px-4 py-3.5 text-[13.5px] text-ink-soft">
+    <div class="mb-5 flex items-start gap-3 rounded-[16px] border border-line bg-card/60 px-4 py-3.5 text-[13.5px] text-ink-soft">
       <span class="lucide-info mt-0.5 size-4 shrink-0 text-apo" />
       <p>{{ t('A request means "we need it". Stock only goes up when the delivery arrives and someone records it with Add stock.') }}</p>
     </div>
 
     <div class="scrollbar-none -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
       <button v-for="s in tabs" :key="s.value" class="flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition"
-        :class="status === s.value ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-soft hover:border-line-strong hover:text-ink'"
+        :class="status === s.value ? 'border-ink bg-ink text-on-ink' : 'border-line bg-card text-ink-soft hover:border-line-strong hover:text-ink'"
         @click="status = s.value">
-        {{ t(s.label) }} <span class="tabular" :class="status === s.value ? 'text-white/60' : 'text-ink-faint'">{{ count(s.value) }}</span>
+        {{ t(s.label) }} <span class="tabular" :class="status === s.value ? 'text-on-ink/60' : 'text-ink-faint'">{{ count(s.value) }}</span>
       </button>
     </div>
 

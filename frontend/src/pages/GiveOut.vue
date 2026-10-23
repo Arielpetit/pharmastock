@@ -14,20 +14,20 @@
         <div class="mt-7">
           <div class="mb-2.5 text-[13px] font-semibold text-ink">{{ t('Quantity') }} <span class="text-alert">*</span></div>
           <div class="flex items-center gap-3">
-            <button type="button" class="flex size-14 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink-soft shadow-card transition hover:border-line-strong hover:text-ink active:scale-95"
+            <button type="button" class="flex size-14 shrink-0 items-center justify-center rounded-full border border-line bg-card text-ink-soft shadow-card transition hover:border-line-strong hover:text-ink active:scale-95"
               :aria-label="t('Less')" @click="step(-1)"><span class="lucide-minus size-5" /></button>
             <label class="flex h-[72px] min-w-0 flex-1 items-center justify-center rounded-[18px] bg-paper">
               <span class="sr-only">{{ t('Quantity') }}</span>
               <input v-model.number="form.qty" type="number" min="1" inputmode="numeric"
                 class="w-full !border-0 !bg-transparent text-center font-display !text-[44px] leading-none text-ink !shadow-none outline-none !ring-0 tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
             </label>
-            <button type="button" class="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-white shadow-card transition hover:bg-[#2a2d34] active:scale-95"
+            <button type="button" class="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-on-ink shadow-card transition hover:bg-ink/85 active:scale-95"
               :aria-label="t('More')" @click="step(1)"><span class="lucide-plus size-5" /></button>
           </div>
           <div class="mt-3 flex flex-wrap justify-center gap-1.5">
             <button v-for="n in [1, 5, 10, 20, 30]" :key="n" type="button"
               class="h-8 min-w-11 rounded-full border px-3 text-[13px] font-medium tabular transition"
-              :class="form.qty === n ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-soft hover:border-line-strong'"
+              :class="form.qty === n ? 'border-ink bg-ink text-on-ink' : 'border-line bg-card text-ink-soft hover:border-line-strong'"
               @click="form.qty = n">{{ n }}</button>
           </div>
         </div>
@@ -37,9 +37,9 @@
           <div class="grid gap-2 sm:grid-cols-2">
             <button v-for="r in reasons" :key="r.value" type="button"
               class="flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left text-[13.5px] transition"
-              :class="form.reason === r.value ? 'border-apo/40 bg-apo-mist font-semibold text-apo-deep ring-1 ring-apo/30' : 'border-line bg-white text-ink-soft hover:border-line-strong'"
+              :class="form.reason === r.value ? 'border-apo/40 bg-apo-mist font-semibold text-apo-deep ring-1 ring-apo/30' : 'border-line bg-card text-ink-soft hover:border-line-strong'"
               @click="form.reason = r.value">
-              <span class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="form.reason === r.value ? 'bg-apo text-white' : 'bg-paper text-ink-mute'">
+              <span class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="form.reason === r.value ? 'bg-apo text-on-apo' : 'bg-paper text-ink-mute'">
                 <span :class="r.icon" class="size-4" />
               </span>
               {{ t(r.value) }}

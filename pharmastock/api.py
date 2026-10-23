@@ -575,6 +575,9 @@ def dashboard():
 		activity.append({"date": day, "out": flt(by_day.get(day, {}).get("out_qty")), "in": flt(by_day.get(day, {}).get("in_qty"))})
 	low = [m for m in meds if m.is_low or m.is_out]
 	return {
+		"health": {k: len([m for m in meds if m.status == k]) for k in ("ok", "low", "out", "expiring", "expired")},
+		"expiry_buckets": _expiry_buckets(),
+		"top_out": _top_out(days=30),
 		"counts": {
 			"medicines": len(meds),
 			"units": sum(m.stock for m in meds),
@@ -589,6 +592,69 @@ def dashboard():
 		"recent": _movements(limit=8),
 		"activity": activity,
 	}
+
+
+def _expiry_buckets():
+	"""Units on the shelf by time left before expiry."""
+	today = getdate()
+	buckets = {"expired": 0, "30": 0, "90": 0, "180": 0, "365": 0, "later": 0}
+	for b in frappe.get_all("Batch", filters={"batch_qty": [">", 0], "disabled": 0, "expiry_date": ["is", "set"],
+											  "item": ["in", _medicine_items()]}, fields=["expiry_date", "batch_qty"]):
+		days = (getdate(b.expiry_date) - today).days
+		key = ("expired" if days < 0 else "30" if days <= 30 else "90" if days <= 90 else "180" if days <= 180
+			   else "365" if days <= 365 else "later")
+		buckets[key] += flt(b.batch_qty)
+	return buckets
+
+
+def _medicine_items():
+	return frappe.get_all("Item", filters={"item_group": ["in", _medicine_groups() or [""]], "disabled": 0}, pluck="name") or [""]
+
+
+def _top_out(days=30, limit=6):
+	"""Medicines given out the most over the last `days` days."""
+	return frappe.db.sql(
+		"""select sle.item_code as medicine, i.item_name as name, i.stock_uom as unit, sum(-sle.actual_qty) as qty
+		from `tabStock Ledger Entry` sle join `tabItem` i on i.name = sle.item_code
+		where sle.is_cancelled = 0 and sle.actual_qty < 0 and sle.voucher_type = 'Stock Entry' and sle.warehouse = %(wh)s
+			and sle.posting_date >= %(since)s and i.disabled = 0
+		group by sle.item_code order by qty desc limit %(limit)s""",
+		{"wh": _warehouse(), "since": add_days(nowdate(), -cint(days)), "limit": cint(limit)},
+		as_dict=True,
+	)
+
+
+# ------------------------------------------------------------------ notifications
+
+
+@frappe.whitelist()
+def notifications():
+	"""What needs action now, plus this user's notification history."""
+	_require_staff()
+	meds = [_with_status(r) for r in _medicine_rows()]
+	exp = expiring()
+	pending = [r for r in requests(limit=50) if r.state == "pending"] if _is_admin() else []
+	log = frappe.get_all(
+		"Notification Log", filters={"for_user": frappe.session.user},
+		fields=["name", "subject", "creation", "`read`", "document_type", "document_name", "type"],
+		order_by="creation desc", limit_page_length=40)
+	for n in log:
+		n.subject = frappe.utils.strip_html(n.subject or "")
+	return {
+		"expired": [r for r in exp if r.expired],
+		"low": sorted([m for m in meds if m.is_low or m.is_out], key=lambda m: m.stock - m.minimum),
+		"expiring": [r for r in exp if not r.expired],
+		"pending": pending,
+		"log": log,
+		"unread": len([n for n in log if not n.read]),
+	}
+
+
+@frappe.whitelist(methods=["POST"])
+def mark_notifications_read():
+	_require_staff()
+	frappe.db.set_value("Notification Log", {"for_user": frappe.session.user, "read": 0}, "read", 1, update_modified=False)
+	return {"ok": True}
 
 
 # ------------------------------------------------------------------ staff

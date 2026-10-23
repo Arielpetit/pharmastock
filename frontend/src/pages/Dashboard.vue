@@ -3,8 +3,8 @@
     <div class="rise mb-8 flex flex-wrap items-end justify-between gap-5">
       <div>
         <p class="eyebrow mb-2">{{ date(new Date(), { weekday: 'long', day: 'numeric', month: 'long' }) }}</p>
-        <h1 class="font-display text-[36px] leading-[1.05] text-ink md:text-[44px]">{{ greeting }}, <em class="italic text-apo">{{ firstName }}</em></h1>
-        <p v-if="data" class="mt-2.5 text-[15px] text-ink-mute">{{ summary }}</p>
+        <h1 class="font-display text-[30px] leading-[1.08] text-ink md:text-[44px]">{{ greeting }}, <em class="italic text-apo">{{ firstName }}</em></h1>
+        <p v-if="data" class="mt-2 text-[14px] text-ink-mute md:text-[15px]">{{ summary }}</p>
       </div>
       <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
         <Btn icon="lucide-clipboard-list" :label="t('Request stock')" @click="openRequest()" />
@@ -32,22 +32,22 @@
           <template #actions>
             <div class="flex items-center gap-4 text-[12px] text-ink-mute">
               <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-apo-mid" />{{ t('In') }}</span>
-              <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-[#E3B27A]" />{{ t('Out') }}</span>
+              <span class="flex items-center gap-1.5"><span class="size-2 rounded-full bg-warn-mid" />{{ t('Out') }}</span>
               <span class="hidden sm:inline">{{ t('last 14 days') }}</span>
             </div>
           </template>
           <div class="px-5 pb-5">
-            <div class="relative h-48">
+            <div class="relative h-40 md:h-48">
               <div class="absolute inset-0 flex flex-col justify-between">
                 <div v-for="i in 4" :key="i" class="border-t border-dashed border-line" />
               </div>
               <div class="relative flex h-full items-end gap-1 sm:gap-2">
                 <div v-for="d in data.activity" :key="d.date" class="group relative flex h-full flex-1 items-end justify-center gap-[3px]">
-                  <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-[10px] bg-ink px-2.5 py-1.5 text-[11.5px] text-white shadow-lift group-hover:block">
+                  <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-[10px] bg-ink px-2.5 py-1.5 text-[11.5px] text-on-ink shadow-lift group-hover:block">
                     <span class="font-semibold">{{ shortDate(d.date) }}</span> · {{ t('In') }} {{ num(d.in) }} · {{ t('Out') }} {{ num(d.out) }}
                   </div>
                   <div class="w-full max-w-[10px] rounded-full bg-apo-mid transition-all" :style="{ height: bar(d.in) }" />
-                  <div class="w-full max-w-[10px] rounded-full bg-[#E3B27A] transition-all" :style="{ height: bar(d.out) }" />
+                  <div class="w-full max-w-[10px] rounded-full bg-warn-mid transition-all" :style="{ height: bar(d.out) }" />
                 </div>
               </div>
             </div>
@@ -59,7 +59,45 @@
           </div>
         </Panel>
 
-        <Panel :title="t('Needs attention')" :count="data.low.length || null">
+        <Panel :title="t('Stock health')">
+          <template #actions><span class="text-[12px] text-ink-mute">{{ t('{0} medicines', num(c.medicines)) }}</span></template>
+          <div class="px-5 pb-5 pt-2"><HealthRing :health="data.health" /></div>
+        </Panel>
+      </div>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Panel :title="t('Most given out')">
+          <template #actions><span class="text-[12px] text-ink-mute">{{ t('last 30 days') }}</span></template>
+          <EmptyState v-if="!data.top_out.length" icon="lucide-hand-heart" :title="t('Nothing given out yet')" />
+          <ul v-else class="space-y-3.5 px-5 pb-5 pt-1">
+            <li v-for="(m, i) in data.top_out" :key="m.medicine">
+              <div class="mb-1.5 flex items-baseline justify-between gap-3 text-[13px]">
+                <RouterLink :to="`/medicines/${encodeURIComponent(m.medicine)}`" class="min-w-0 truncate font-semibold text-ink hover:underline">{{ m.name }}</RouterLink>
+                <span class="shrink-0 text-ink-mute tabular"><span class="font-semibold text-ink">{{ num(m.qty) }}</span> {{ t(m.unit) }}</span>
+              </div>
+              <div class="h-2 overflow-hidden rounded-full bg-paper-deep">
+                <div class="h-full rounded-full transition-all" :class="i === 0 ? 'bg-apo' : 'bg-apo-mid/70'" :style="{ width: `${Math.max(4, (m.qty / topMax) * 100)}%` }" />
+              </div>
+            </li>
+          </ul>
+        </Panel>
+
+        <Panel :title="t('Expiry timeline')">
+          <template #actions><span class="text-[12px] text-ink-mute">{{ t('units on the shelf') }}</span></template>
+          <div class="px-5 pb-5 pt-1">
+            <div class="flex h-40 items-end gap-2">
+              <div v-for="b in buckets" :key="b.key" class="group relative flex h-full flex-1 flex-col items-center justify-end">
+                <span class="mb-1.5 text-[11.5px] font-semibold text-ink tabular" :class="!b.value && 'text-ink-faint'">{{ num(b.value) }}</span>
+                <div class="w-full max-w-[34px] rounded-t-[8px] rounded-b-[3px] transition-all" :class="b.tone" :style="{ height: b.value ? `${Math.max(6, (b.value / bucketMax) * 100)}%` : '3px' }" />
+              </div>
+            </div>
+            <div class="mt-2 flex gap-2 border-t border-line pt-2">
+              <span v-for="b in buckets" :key="b.key" class="flex-1 text-center text-[10.5px] leading-tight text-ink-mute">{{ b.label }}</span>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel class="md:col-span-2 xl:col-span-1" :title="t('Needs attention')" :count="data.low.length || null">
           <template #actions><RouterLink to="/medicines?status=low" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
           <EmptyState v-if="!data.low.length" icon="lucide-circle-check" :title="t('All good')" :text="t('Every medicine is above its minimum level.')" />
           <ul v-else class="px-2 pb-2">
@@ -130,6 +168,7 @@ import Panel from '@/components/Panel.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
+import HealthRing from '@/components/HealthRing.vue'
 import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, num, shortDate } from '@/format'
@@ -153,6 +192,19 @@ const summary = computed(() => {
   return parts.length ? parts.join(' · ') : t('Everything is in order today.')
 })
 const peak = computed(() => Math.max(1, ...(data.value?.activity || []).flatMap((d) => [d.in, d.out])))
+const topMax = computed(() => Math.max(1, ...(data.value?.top_out || []).map((m) => m.qty)))
+const buckets = computed(() => {
+  const b = data.value?.expiry_buckets || {}
+  return [
+    { key: 'expired', label: t('Expired'), value: b.expired || 0, tone: 'bg-alert' },
+    { key: '30', label: t('≤ 30 d'), value: b['30'] || 0, tone: 'bg-alert/60' },
+    { key: '90', label: t('1–3 mo'), value: b['90'] || 0, tone: 'bg-warn-mid' },
+    { key: '180', label: t('3–6 mo'), value: b['180'] || 0, tone: 'bg-apo-mid/60' },
+    { key: '365', label: t('6–12 mo'), value: b['365'] || 0, tone: 'bg-apo-mid' },
+    { key: 'later', label: t('> 1 yr'), value: b.later || 0, tone: 'bg-apo' },
+  ]
+})
+const bucketMax = computed(() => Math.max(1, ...buckets.value.map((b) => b.value)))
 const bar = (v) => (v ? `${Math.max(5, (v / peak.value) * 100)}%` : '3px')
 
 async function load() {

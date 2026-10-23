@@ -11,7 +11,7 @@
       <label class="relative block flex-1">
         <span class="lucide-search pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-ink-mute" />
         <input v-model="search" type="search" :placeholder="t('Search by name…')"
-          class="h-11 w-full rounded-full border border-line bg-white pl-11 pr-4 text-[14px] text-ink shadow-card outline-none transition placeholder:text-ink-faint focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
+          class="h-11 w-full rounded-full border border-line bg-card pl-11 pr-4 text-[14px] text-ink shadow-card outline-none transition placeholder:text-ink-faint focus:border-apo-mid focus:ring-4 focus:ring-apo/10" />
       </label>
       <div class="grid grid-cols-2 gap-2.5 lg:flex">
         <Select v-model="category" :options="categoryOptions" class="lg:w-52" variant="outline" size="md" />
@@ -21,11 +21,11 @@
 
     <div class="scrollbar-none -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
       <button v-for="s in statuses" :key="s.value" class="flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition"
-        :class="status === s.value ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-soft hover:border-line-strong hover:text-ink'"
+        :class="status === s.value ? 'border-ink bg-ink text-on-ink' : 'border-line bg-card text-ink-soft hover:border-line-strong hover:text-ink'"
         @click="status = s.value">
-        <span v-if="s.dot" class="size-1.5 rounded-full" :class="status === s.value ? 'bg-white' : s.dot" />
+        <span v-if="s.dot" class="size-1.5 rounded-full" :class="status === s.value ? 'bg-card' : s.dot" />
         {{ t(s.label) }}
-        <span class="tabular" :class="status === s.value ? 'text-white/60' : 'text-ink-faint'">{{ counts[s.value] }}</span>
+        <span class="tabular" :class="status === s.value ? 'text-on-ink/60' : 'text-ink-faint'">{{ counts[s.value] }}</span>
       </button>
     </div>
 
@@ -132,9 +132,9 @@ const expiryBefore = ref(route.query.before || '')
 
 const statuses = [
   { value: 'all', label: 'All' },
-  { value: 'low', label: 'Low stock', dot: 'bg-[#d9973f]' },
+  { value: 'low', label: 'Low stock', dot: 'bg-warn-mid' },
   { value: 'out', label: 'Out of stock', dot: 'bg-alert' },
-  { value: 'expiring', label: 'Expiring soon', dot: 'bg-[#d9973f]' },
+  { value: 'expiring', label: 'Expiring soon', dot: 'bg-warn-mid' },
   { value: 'expired', label: 'Expired', dot: 'bg-alert' },
   { value: 'ok', label: 'In stock', dot: 'bg-apo-mid' },
 ]

@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="ui.request.open" :title="t('Request stock')"
+  <Sheet v-model:open="ui.request.open" :title="t('Request stock')"
     :message="t('Ask for medicine to be ordered. An administrator approves the request. It does not add stock.')"
     icon="lucide-clipboard-list" theme="blue" size="lg">
     <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
@@ -9,12 +9,12 @@
           {{ t('In stock: {0} {1} · minimum {2}', num(picked.stock), picked.unit, num(picked.minimum)) }}
         </p>
       </div>
-      <FormControl variant="outline" v-model="form.qty" type="number" min="1" :label="t('Quantity needed')" required size="lg" />
-      <div>
-        <div class="mb-1.5 text-xs text-ink-gray-5">{{ t('Urgency') }}</div>
-        <div class="grid grid-cols-3 gap-1 rounded-full border border-line bg-white p-1">
+      <FormControl variant="outline" v-model="form.qty" class="col-span-2" type="number" min="1" :label="t('Quantity needed')" required size="lg" />
+      <div class="col-span-2">
+        <div class="mb-1.5 text-[13px] text-ink-soft">{{ t('Urgency') }}</div>
+        <div class="grid grid-cols-3 gap-1 rounded-full border border-line bg-card p-1">
           <button v-for="u in urgencies" :key="u.value" type="button"
-            class="rounded-full px-2 py-1.5 text-[13px] font-medium transition"
+            class="rounded-full px-2 py-2 text-[13px] font-medium transition"
             :class="form.urgency === u.value ? u.active : 'text-ink-mute hover:text-ink'"
             @click="form.urgency = u.value">{{ t(u.value) }}</button>
         </div>
@@ -24,17 +24,16 @@
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
-      <div class="flex w-full justify-end gap-2">
         <Btn variant="ghost" :label="t('Cancel')" @click="ui.request.open = false" />
         <Btn variant="primary" :label="t('Send request')" :loading="saving" icon="lucide-send" @click="save" />
-      </div>
     </template>
-  </Dialog>
+  </Sheet>
 </template>
 
 <script setup>
+import Sheet from './Sheet.vue'
 import { reactive, ref, watch } from 'vue'
-import { Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import { ErrorMessage, FormControl, toast } from 'frappe-ui'
 import Btn from './Btn.vue'
 import MedicinePicker from './MedicinePicker.vue'
 import { write } from '@/api'
@@ -43,7 +42,7 @@ import { num } from '@/format'
 import { ui, changed } from '@/ui'
 
 const urgencies = [
-  { value: 'Routine', active: 'bg-ink text-white' },
+  { value: 'Routine', active: 'bg-ink text-on-ink' },
   { value: 'Urgent', active: 'bg-warn-soft text-warn' },
   { value: 'Emergency', active: 'bg-alert-soft text-alert' },
 ]

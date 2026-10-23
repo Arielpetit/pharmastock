@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="ui.addStock.open" :title="t('Add stock')" :message="t('Record medicine that has arrived at the pharmacy.')"
+  <Sheet v-model:open="ui.addStock.open" :title="t('Add stock')" :message="t('Record medicine that has arrived at the pharmacy.')"
     icon="lucide-package-plus" theme="green" size="lg">
     <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
       <div class="col-span-2">
@@ -17,17 +17,16 @@
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
-      <div class="flex w-full justify-end gap-2">
         <Btn variant="ghost" :label="t('Cancel')" @click="ui.addStock.open = false" />
         <Btn variant="primary" :label="t('Add stock')" :loading="saving" icon="lucide-check" @click="save" />
-      </div>
     </template>
-  </Dialog>
+  </Sheet>
 </template>
 
 <script setup>
+import Sheet from './Sheet.vue'
 import { reactive, ref, watch } from 'vue'
-import { Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import { ErrorMessage, FormControl, toast } from 'frappe-ui'
 import Btn from './Btn.vue'
 import MedicinePicker from './MedicinePicker.vue'
 import { write } from '@/api'

@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="ui.sync.open" :title="t('Changes saved on this device')" icon="lucide-refresh-cw" theme="blue" size="lg"
+  <Sheet v-model:open="ui.sync.open" :title="t('Changes saved on this device')" icon="lucide-refresh-cw" theme="blue" size="lg"
     :message="t('These changes were made without a connection. They are sent automatically when you are online.')">
     <div v-if="!net.outbox.length" class="py-6 text-center text-sm text-ink-gray-5">{{ t('Everything is sent.') }}</div>
     <ul v-else class="divide-y divide-outline-gray-1 rounded-4 border border-outline-gray-1">
@@ -14,16 +14,15 @@
       </li>
     </ul>
     <template #actions>
-      <div class="flex w-full justify-end gap-2">
         <Btn variant="ghost" :label="t('Close')" @click="ui.sync.open = false" />
         <Btn variant="primary" :label="t('Send now')" :disabled="!net.online" :loading="net.syncing" icon="lucide-upload" @click="sendNow" />
-      </div>
     </template>
-  </Dialog>
+  </Sheet>
 </template>
 
 <script setup>
-import { Badge, Dialog, toast } from 'frappe-ui'
+import Sheet from './Sheet.vue'
+import { Badge, toast } from 'frappe-ui'
 import Btn from './Btn.vue'
 import { net, flush, discard } from '@/api'
 import { t } from '@/i18n'

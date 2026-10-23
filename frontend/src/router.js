@@ -11,6 +11,7 @@ const routes = [
   { path: '/reports', name: 'reports', component: () => import('./pages/Reports.vue') },
   { path: '/staff', name: 'staff', component: () => import('./pages/Staff.vue'), meta: { admin: true } },
   { path: '/account', name: 'account', component: () => import('./pages/Account.vue') },
+  { path: '/notifications', name: 'notifications', component: () => import('./pages/Notifications.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 

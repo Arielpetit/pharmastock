@@ -7,9 +7,9 @@
       </template>
     </PageHeader>
 
-    <div class="no-print mb-4 inline-flex rounded-full border border-line bg-white p-1 shadow-card">
+    <div class="no-print mb-4 inline-flex rounded-full border border-line bg-card p-1 shadow-card">
       <button v-for="x in tabs" :key="x.value" class="flex items-center gap-2 rounded-full px-4 py-1.5 text-[13px] font-medium transition"
-        :class="tab === x.value ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'" @click="tab = x.value">
+        :class="tab === x.value ? 'bg-ink text-on-ink' : 'text-ink-soft hover:text-ink'" @click="tab = x.value">
         <span :class="x.icon" class="size-4" /> <span :class="tab === x.value ? '' : 'hidden sm:inline'">{{ t(x.label) }}</span>
       </button>
     </div>

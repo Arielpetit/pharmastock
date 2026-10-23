@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="ui.medicine.open" :title="editing ? t('Edit medicine') : t('Add a new medicine')"
+  <Sheet v-model:open="ui.medicine.open" :title="editing ? t('Edit medicine') : t('Add a new medicine')"
     :message="editing ? '' : t('Add the medicine to your list and, if you have it, its first stock.')"
     icon="lucide-pill" theme="green" size="2xl">
     <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
@@ -31,18 +31,17 @@
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
-      <div class="flex w-full justify-end gap-2">
         <Btn variant="ghost" :label="t('Cancel')" @click="ui.medicine.open = false" />
         <Btn variant="primary" :label="editing ? t('Save changes') : t('Add medicine')" :loading="saving" icon="lucide-check" @click="save" />
-      </div>
     </template>
-  </Dialog>
+  </Sheet>
 </template>
 
 <script setup>
+import Sheet from './Sheet.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Dialog, ErrorMessage, FormControl, toast, dialog } from 'frappe-ui'
+import { ErrorMessage, FormControl, toast, dialog } from 'frappe-ui'
 import Btn from './Btn.vue'
 import { get, post, ApiError } from '@/api'
 import { t } from '@/i18n'
