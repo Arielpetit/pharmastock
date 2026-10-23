@@ -1,94 +1,99 @@
 <template>
   <div>
-    <PageHeader :title="t('Reports')" :subtitle="t('Movements, expiry and stock levels. Download any report for Excel.')">
+    <PageHeader :eyebrow="t('Records')" :title="t('Reports')" :subtitle="t('Movements, expiry and stock levels. Download any report for Excel.')">
       <template #actions>
-        <Button size="md" icon-left="lucide-printer" :label="t('Print')" @click="print" />
-        <Button size="md" icon-left="lucide-download" :label="t('Download (Excel)')" :disabled="!current.length" @click="exportCsv" />
+        <Btn class="no-print" icon="lucide-printer" :label="t('Print')" @click="print" />
+        <Btn class="no-print" variant="primary" icon="lucide-download" :label="t('Download (Excel)')" :disabled="!current.length" @click="exportCsv" />
       </template>
     </PageHeader>
 
-    <div class="mb-4 inline-flex rounded-4 bg-surface-gray-2 p-1 print:hidden">
-      <button v-for="x in tabs" :key="x.value" class="flex items-center gap-2 rounded-3 px-3 py-1.5 text-sm font-medium transition"
-        :class="tab === x.value ? 'bg-surface-base text-ink-gray-9 shadow-sm' : 'text-ink-gray-6 hover:text-ink-gray-8'" @click="tab = x.value">
-        <span :class="x.icon" class="size-4" /> <span class="hidden sm:inline">{{ t(x.label) }}</span>
+    <div class="no-print mb-4 inline-flex rounded-full border border-line bg-white p-1 shadow-card">
+      <button v-for="x in tabs" :key="x.value" class="flex items-center gap-2 rounded-full px-4 py-1.5 text-[13px] font-medium transition"
+        :class="tab === x.value ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'" @click="tab = x.value">
+        <span :class="x.icon" class="size-4" /> <span :class="tab === x.value ? '' : 'hidden sm:inline'">{{ t(x.label) }}</span>
       </button>
     </div>
 
     <!-- filters -->
-    <div class="card mb-4 flex flex-wrap items-end gap-3 p-3 print:hidden">
+    <div class="no-print mb-4 flex flex-wrap items-end gap-3">
       <template v-if="tab === 'movements'">
-        <FormControl v-model="from" type="date" format="D MMM YYYY" :label="t('From')" size="md" class="w-40" />
-        <FormControl v-model="to" type="date" format="D MMM YYYY" :label="t('To')" size="md" class="w-40" />
-        <FormControl v-model="kind" type="select" :label="t('Type')" size="md" class="w-40"
-          :options="[{ label: t('All'), value: '' }, { label: t('Stock in'), value: 'in' }, { label: t('Stock out'), value: 'out' }]" />
-        <div class="min-w-56 flex-1"><MedicinePicker v-model="medicine" :label="t('Medicine')" /></div>
-        <Button v-if="medicine" size="md" variant="ghost" icon-left="lucide-x" :label="t('Any medicine')" @click="medicine = null" />
+        <div class="w-[calc(50%-6px)] sm:w-44"><FormControl v-model="from" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" variant="outline" :label="t('From')" size="md" /></div>
+        <div class="w-[calc(50%-6px)] sm:w-44"><FormControl v-model="to" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" variant="outline" :label="t('To')" size="md" /></div>
+        <div class="w-[calc(50%-6px)] sm:w-40">
+          <FormControl v-model="kind" type="select" :label="t('Type')" variant="outline" size="md"
+            :options="[{ label: t('All'), value: '' }, { label: t('Stock in'), value: 'in' }, { label: t('Stock out'), value: 'out' }]" />
+        </div>
+        <div class="w-full sm:w-72"><MedicinePicker v-model="medicine" :label="t('Medicine')" size="md" /></div>
+        <Btn v-if="medicine" variant="ghost" icon="lucide-x" :label="t('Any medicine')" @click="medicine = null" />
       </template>
-      <template v-else-if="tab === 'expiry'">
-        <FormControl v-model="days" type="select" :label="t('Expiring within')" size="md" class="w-48"
+      <div v-else-if="tab === 'expiry'" class="w-52">
+        <FormControl v-model="days" type="select" :label="t('Expiring within')" variant="outline" size="md"
           :options="[30, 60, 90, 180, 365].map((d) => ({ label: t('{0} days', d), value: String(d) }))" />
-      </template>
-      <template v-else>
-        <FormControl v-model="stockFilter" type="select" :label="t('Show')" size="md" class="w-56"
+      </div>
+      <div v-else class="w-60">
+        <FormControl v-model="stockFilter" type="select" :label="t('Show')" variant="outline" size="md"
           :options="[{ label: t('All medicines'), value: 'all' }, { label: t('Low or out of stock'), value: 'low' }]" />
-      </template>
-      <div class="ml-auto self-center text-sm text-ink-gray-5">{{ t('{0} rows', current.length) }}</div>
+      </div>
+      <div class="ml-auto pb-2 text-[13px] text-ink-mute tabular">{{ t('{0} rows', current.length) }}</div>
     </div>
 
-    <div class="card overflow-x-auto">
-      <div v-if="loading" class="p-10 text-center"><LoadingIndicator class="mx-auto size-5 text-ink-gray-5" /></div>
+    <div class="surface overflow-x-auto">
+      <div v-if="loading" class="p-12 text-center"><LoadingIndicator class="mx-auto size-5 text-ink-mute" /></div>
       <EmptyState v-else-if="!current.length" icon="lucide-file-search" :title="t('Nothing to show')" :text="t('Change the filters to see more.')" />
 
-      <table v-else-if="tab === 'movements'" class="w-full min-w-[720px] text-left text-sm">
-        <thead class="bg-surface-gray-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
-          <tr><th class="px-4 py-2.5">{{ t('Date') }}</th><th class="px-4 py-2.5">{{ t('Medicine') }}</th><th class="px-4 py-2.5 text-right">{{ t('Quantity') }}</th>
-            <th class="px-4 py-2.5">{{ t('Reason') }}</th><th class="px-4 py-2.5">{{ t('Lot') }}</th><th class="px-4 py-2.5">{{ t('By') }}</th>
-            <th class="px-4 py-2.5 text-right">{{ t('Balance') }}</th></tr>
-        </thead>
-        <tbody class="divide-y divide-outline-gray-1">
-          <tr v-for="(r, i) in movements" :key="i">
-            <td class="whitespace-nowrap px-4 py-2.5 text-ink-gray-6">{{ date(r.date) }}</td>
-            <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ r.medicine_name }}</td>
-            <td class="px-4 py-2.5 text-right font-semibold tabular" :class="r.direction === 'in' ? 'text-teal-700' : 'text-ink-gray-8'">
+      <table v-else-if="tab === 'movements'" class="w-full min-w-[760px] text-left text-[13.5px]">
+        <thead><tr class="border-b border-line text-[12px] text-ink-mute">
+          <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Date') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Medicine') }}</th>
+          <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Reason') }}</th>
+          <th class="px-3 py-3.5 font-medium">{{ t('Lot') }}</th><th class="px-3 py-3.5 font-medium">{{ t('By') }}</th>
+          <th class="py-3.5 pl-3 pr-6 text-right font-medium">{{ t('Balance') }}</th></tr></thead>
+        <tbody>
+          <tr v-for="(r, i) in movements" :key="i" class="border-b border-line/70 last:border-0">
+            <td class="whitespace-nowrap py-3 pl-6 pr-3 text-ink-mute">{{ date(r.date) }}</td>
+            <td class="px-3 py-3 font-semibold text-ink">{{ r.medicine_name }}</td>
+            <td class="px-3 py-3 text-right font-display text-[17px] tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">
               {{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-7">{{ t(r.reason || '') }}<span v-if="r.recipient" class="text-ink-gray-5"> · {{ r.recipient }}</span></td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ r.batch || '—' }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ r.by }}</td>
-            <td class="px-4 py-2.5 text-right tabular text-ink-gray-6">{{ num(r.balance) }}</td>
+            <td class="px-3 py-3 text-ink-soft">{{ t(r.reason || '') }}<span v-if="r.recipient" class="text-ink-mute"> · {{ r.recipient }}</span></td>
+            <td class="font-label px-3 py-3 text-[11.5px] text-ink-mute">{{ r.batch || '—' }}</td>
+            <td class="px-3 py-3 text-ink-soft">{{ r.by }}</td>
+            <td class="py-3 pl-3 pr-6 text-right text-ink-mute tabular">{{ num(r.balance) }}</td>
           </tr>
         </tbody>
       </table>
 
-      <table v-else-if="tab === 'expiry'" class="w-full min-w-[640px] text-left text-sm">
-        <thead class="bg-surface-gray-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
-          <tr><th class="px-4 py-2.5">{{ t('Medicine') }}</th><th class="px-4 py-2.5">{{ t('Lot') }}</th><th class="px-4 py-2.5">{{ t('Expiry date') }}</th>
-            <th class="px-4 py-2.5">{{ t('Time left') }}</th><th class="px-4 py-2.5 text-right">{{ t('Quantity') }}</th><th class="px-4 py-2.5">{{ t('Location') }}</th></tr>
-        </thead>
-        <tbody class="divide-y divide-outline-gray-1">
-          <tr v-for="r in expiry" :key="r.batch" :class="r.expired && 'bg-red-50/50'">
-            <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ r.medicine_name }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ r.batch }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-7">{{ date(r.expiry_date) }}</td>
-            <td class="px-4 py-2.5"><ExpiryChip :date="r.expiry_date" :days="r.days_left" :show-date="false" class="!items-start" /></td>
-            <td class="px-4 py-2.5 text-right font-semibold tabular text-ink-gray-9">{{ num(r.qty) }} <span class="font-normal text-ink-gray-5">{{ t(r.unit) }}</span></td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ r.location || '—' }}</td>
+      <table v-else-if="tab === 'expiry'" class="w-full min-w-[680px] text-left text-[13.5px]">
+        <thead><tr class="border-b border-line text-[12px] text-ink-mute">
+          <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Medicine') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Lot') }}</th>
+          <th class="px-3 py-3.5 font-medium">{{ t('Expiry date') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Time left') }}</th>
+          <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Location') }}</th></tr></thead>
+        <tbody>
+          <tr v-for="r in expiry" :key="r.batch" class="border-b border-line/70 last:border-0" :class="r.expired && 'bg-alert-soft/40'">
+            <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.medicine_name }}</td>
+            <td class="font-label px-3 py-3 text-[11.5px] text-ink-mute">{{ r.batch }}</td>
+            <td class="px-3 py-3 text-ink-soft">{{ date(r.expiry_date) }}</td>
+            <td class="px-3 py-3"><ExpiryChip :date="r.expiry_date" :days="r.days_left" :show-date="false" /></td>
+            <td class="px-3 py-3 text-right"><span class="font-display text-[17px] text-ink tabular">{{ num(r.qty) }}</span> <span class="text-ink-mute">{{ t(r.unit) }}</span></td>
+            <td class="py-3 pl-3 pr-6"><span v-if="r.location" class="font-label rounded-md bg-paper-deep px-2 py-1 text-[11.5px] text-ink-soft">{{ r.location }}</span><span v-else class="text-ink-faint">—</span></td>
           </tr>
         </tbody>
       </table>
 
-      <table v-else class="w-full min-w-[640px] text-left text-sm">
-        <thead class="bg-surface-gray-1 text-xs font-medium uppercase tracking-wide text-ink-gray-5">
-          <tr><th class="px-4 py-2.5">{{ t('Medicine') }}</th><th class="px-4 py-2.5">{{ t('Category') }}</th><th class="px-4 py-2.5 text-right">{{ t('In stock') }}</th>
-            <th class="px-4 py-2.5 text-right">{{ t('Minimum') }}</th><th class="px-4 py-2.5">{{ t('Nearest expiry') }}</th><th class="px-4 py-2.5">{{ t('Status') }}</th></tr>
-        </thead>
-        <tbody class="divide-y divide-outline-gray-1">
-          <tr v-for="r in stock" :key="r.code">
-            <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ r.name }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ t(r.category) }}</td>
-            <td class="px-4 py-2.5 text-right font-semibold tabular text-ink-gray-9">{{ num(r.stock) }} <span class="font-normal text-ink-gray-5">{{ t(r.unit) }}</span></td>
-            <td class="px-4 py-2.5 text-right tabular text-ink-gray-6">{{ num(r.minimum) }}</td>
-            <td class="px-4 py-2.5 text-ink-gray-6">{{ r.nearest_expiry ? date(r.nearest_expiry) : '—' }}</td>
-            <td class="px-4 py-2.5"><StatusBadge :status="r.status" /></td>
+      <table v-else class="w-full min-w-[680px] text-left text-[13.5px]">
+        <thead><tr class="border-b border-line text-[12px] text-ink-mute">
+          <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Medicine') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Category') }}</th>
+          <th class="px-3 py-3.5 font-medium">{{ t('In stock') }}</th><th class="px-3 py-3.5 text-right font-medium">{{ t('Minimum') }}</th>
+          <th class="px-3 py-3.5 font-medium">{{ t('Nearest expiry') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Status') }}</th></tr></thead>
+        <tbody>
+          <tr v-for="r in stock" :key="r.code" class="border-b border-line/70 last:border-0">
+            <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.name }}</td>
+            <td class="px-3 py-3 text-ink-soft">{{ t(r.category) }}</td>
+            <td class="px-3 py-3">
+              <span class="font-display text-[17px] text-ink tabular">{{ num(r.stock) }}</span> <span class="text-ink-mute">{{ t(r.unit) }}</span>
+              <BlisterGauge class="mt-1.5" :stock="r.stock" :minimum="r.minimum" />
+            </td>
+            <td class="px-3 py-3 text-right text-ink-mute tabular">{{ num(r.minimum) }}</td>
+            <td class="px-3 py-3"><ExpiryChip :date="r.nearest_expiry" /></td>
+            <td class="py-3 pl-3 pr-6"><StatusBadge :status="r.status" /></td>
           </tr>
         </tbody>
       </table>
@@ -99,11 +104,13 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, FormControl, LoadingIndicator, toast } from 'frappe-ui'
+import { FormControl, LoadingIndicator, toast } from 'frappe-ui'
+import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
+import BlisterGauge from '@/components/BlisterGauge.vue'
 import MedicinePicker from '@/components/MedicinePicker.vue'
 import { get } from '@/api'
 import { t } from '@/i18n'

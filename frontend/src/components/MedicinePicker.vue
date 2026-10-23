@@ -1,6 +1,6 @@
 <template>
   <!-- the combobox is shown once the list is loaded: before that it would drop a preset value it cannot find -->
-  <FormControl v-if="!loaded" :label="label" :required="required" size="md" disabled :placeholder="t('Loading…')" />
+  <FormControl v-if="!loaded" :label="label" :required="required" :size="size" variant="outline" disabled :placeholder="t('Loading…')" />
   <Combobox
     v-else
     :model-value="modelValue"
@@ -12,7 +12,8 @@
     :empty-text="t('No medicine found')"
     :loading="loading"
     open-on-focus
-    size="md"
+    variant="outline"
+    :size="size"
     class="w-full"
     @update:model-value="pick"
   >
@@ -32,7 +33,7 @@ import { t } from '@/i18n'
 import { num } from '@/format'
 import { ui } from '@/ui'
 
-const props = defineProps({ modelValue: String, label: String, required: Boolean, error: String })
+const props = defineProps({ modelValue: String, label: String, required: Boolean, error: String, size: { type: String, default: 'lg' } })
 const emit = defineEmits(['update:modelValue', 'select'])
 const meds = ref([])
 const loading = ref(false)

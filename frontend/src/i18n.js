@@ -1,5 +1,7 @@
 // English is written in the code; French comes from fr.js. Missing French keys fall back to English.
 import { ref } from 'vue'
+import dayjs from 'dayjs/esm'
+import 'dayjs/esm/locale/fr'
 import fr from './fr'
 
 const saved = (() => {
@@ -12,10 +14,12 @@ const saved = (() => {
 
 export const lang = ref(saved || ((navigator.language || 'en').startsWith('fr') ? 'fr' : 'en'))
 document.documentElement.lang = lang.value
+dayjs.locale(lang.value)
 
 export function setLanguage(code) {
   lang.value = code && code.startsWith('fr') ? 'fr' : 'en'
   document.documentElement.lang = lang.value
+  dayjs.locale(lang.value)
   try {
     localStorage.setItem('pharmastock.lang', lang.value)
   } catch {}

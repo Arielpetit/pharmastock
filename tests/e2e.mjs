@@ -50,7 +50,7 @@ async function click(page, text, tag = 'button') {
 async function field(page, label, scope = 'body') {
   return page.evaluateHandle((label, scope) => {
     const root = document.querySelector(scope === 'dialog' ? '[role="dialog"]' : 'body')
-    const labels = [...root.querySelectorAll('label, .text-xs')].filter((l) => l.textContent.replace('*', '').trim().startsWith(label))
+    const labels = [...root.querySelectorAll('label, .text-xs, div, span')].filter((l) => l.childElementCount <= 2 && l.textContent.replace('*', '').trim().startsWith(label) && l.textContent.length < label.length + 40)
     for (const l of labels) {
       let el = l
       for (let i = 0; i < 5 && el; i++, el = el.parentElement) {

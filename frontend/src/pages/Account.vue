@@ -1,46 +1,55 @@
 <template>
-  <div class="max-w-2xl">
-    <PageHeader :title="t('My account')" />
+  <div class="max-w-[720px]">
+    <PageHeader :eyebrow="t('Settings')" :title="t('My account')" />
 
-    <div class="card mb-5 flex items-center gap-4 p-5">
-      <Avatar :label="session.user.full_name" :image="session.user.image" size="3xl" />
+    <section class="surface mb-4 flex items-center gap-5 p-6">
+      <Initials :name="session.user.full_name" size="xl" />
       <div class="min-w-0">
-        <div class="text-lg font-semibold text-ink-gray-9">{{ session.user.full_name }}</div>
-        <div class="text-sm text-ink-gray-5">{{ session.user.email }}</div>
-        <Badge class="mt-2" :theme="session.isAdmin ? 'violet' : 'blue'" :label="session.isAdmin ? t('Pharmacy administrator') : t('Pharmacy staff')" />
+        <div class="font-display text-[26px] leading-tight text-ink">{{ session.user.full_name }}</div>
+        <div class="mt-0.5 truncate text-[13.5px] text-ink-mute">{{ session.user.email }}</div>
+        <span class="mt-3 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold" :class="session.isAdmin ? 'bg-ink text-white' : 'bg-apo-soft text-apo-deep'">
+          {{ session.isAdmin ? t('Pharmacy administrator') : t('Pharmacy staff') }}</span>
       </div>
-    </div>
+    </section>
 
-    <Panel class="mb-5" :title="t('Language')" icon="lucide-languages" padded>
+    <Panel class="mb-4" :title="t('Language')" padded>
       <div class="grid grid-cols-2 gap-2">
-        <button v-for="l in [{ v: 'en', n: 'English' }, { v: 'fr', n: 'Français' }]" :key="l.v" class="rounded-4 border p-3 text-left text-sm font-medium transition"
-          :class="lang === l.v ? 'border-teal-600 bg-teal-50 text-teal-900 ring-1 ring-teal-600' : 'border-outline-gray-2 text-ink-gray-7 hover:border-outline-gray-3'"
-          @click="setLanguage(l.v)">{{ l.n }}</button>
+        <button v-for="l in [{ v: 'fr', n: 'Français' }, { v: 'en', n: 'English' }]" :key="l.v" class="flex items-center justify-between rounded-[14px] border px-4 py-3.5 text-left text-[14px] font-semibold transition"
+          :class="lang === l.v ? 'border-apo/40 bg-apo-mist text-apo-deep ring-1 ring-apo/30' : 'border-line bg-white text-ink-soft hover:border-line-strong'"
+          @click="setLanguage(l.v)">{{ l.n }}<span v-if="lang === l.v" class="lucide-check size-4" /></button>
       </div>
     </Panel>
 
-    <Panel class="mb-5" :title="t('Change password')" icon="lucide-key-round" padded>
+    <Panel class="mb-4" :title="t('Change password')" padded>
       <form class="space-y-4" @submit.prevent="changePassword">
-        <FormControl v-model="pw.old" type="password" :label="t('Current password')" size="md" autocomplete="current-password" />
-        <FormControl v-model="pw.new" type="password" :label="t('New password')" size="md" autocomplete="new-password"
+        <FormControl v-model="pw.old" type="password" :label="t('Current password')" size="lg" variant="outline" autocomplete="current-password" />
+        <FormControl v-model="pw.new" type="password" :label="t('New password')" size="lg" variant="outline" autocomplete="new-password"
           :description="t('At least 8 characters, with letters and numbers.')" />
-        <ErrorMessage :message="pwError" />
-        <Button type="submit" variant="solid" size="md" :loading="pwSaving" :label="t('Update password')" />
+        <p v-if="pwError" class="flex items-center gap-2 rounded-[12px] bg-alert-soft px-3.5 py-2.5 text-[13px] text-alert">
+          <span class="lucide-circle-alert size-4 shrink-0" />{{ pwError }}
+        </p>
+        <Btn type="submit" variant="primary" :loading="pwSaving" :label="t('Update password')" />
       </form>
     </Panel>
 
-    <Panel class="mb-5" :title="t('Install the app')" icon="lucide-smartphone" padded>
-      <p class="text-sm text-ink-gray-6">{{ t('On Android, open the browser menu and tap "Install app" or "Add to Home screen". On iPhone, tap Share, then "Add to Home Screen". The app then opens like any other app and keeps working offline.') }}</p>
-      <Button v-if="installEvent" class="mt-3" size="md" icon-left="lucide-download" :label="t('Install now')" @click="install" />
+    <Panel class="mb-4" :title="t('Install the app')" padded>
+      <div class="flex items-start gap-4">
+        <Logo mark-only mark-class="size-12" />
+        <p class="text-[13.5px] leading-relaxed text-ink-soft">{{ t('On Android, open the browser menu and tap "Install app" or "Add to Home screen". On iPhone, tap Share, then "Add to Home Screen". The app then opens like any other app and keeps working offline.') }}</p>
+      </div>
+      <Btn v-if="installEvent" class="mt-4" variant="brand" icon="lucide-download" :label="t('Install now')" @click="install" />
     </Panel>
 
-    <Panel :title="t('This device')" icon="lucide-refresh-cw" padded>
-      <div class="flex items-center justify-between gap-3 text-sm">
-        <span class="text-ink-gray-6">{{ net.outbox.length ? t('{0} change(s) waiting to be sent', net.outbox.length) : t('Everything is sent.') }}</span>
-        <Button size="sm" :label="t('Details')" @click="ui.sync.open = true" />
+    <Panel :title="t('This device')" padded>
+      <div class="flex items-center justify-between gap-3 text-[13.5px]">
+        <span class="flex items-center gap-2 text-ink-soft">
+          <span class="size-1.5 rounded-full" :class="net.outbox.length ? 'bg-[#5B7DB1]' : 'bg-apo-mid'" />
+          {{ net.outbox.length ? t('{0} change(s) waiting to be sent', net.outbox.length) : t('Everything is sent.') }}
+        </span>
+        <Btn size="sm" :label="t('Details')" @click="ui.sync.open = true" />
       </div>
-      <div class="mt-4 border-t border-outline-gray-1 pt-4">
-        <Button theme="red" variant="subtle" size="md" icon-left="lucide-log-out" :label="t('Log out')" @click="logout" />
+      <div class="mt-5 border-t border-line pt-5">
+        <Btn variant="danger" icon="lucide-log-out" :label="t('Log out')" @click="logout" />
       </div>
     </Panel>
   </div>
@@ -48,9 +57,12 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { Avatar, Badge, Button, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import { FormControl, toast } from 'frappe-ui'
+import Initials from '@/components/Initials.vue'
+import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Panel from '@/components/Panel.vue'
+import Logo from '@/components/Logo.vue'
 import { net, post } from '@/api'
 import { lang, setLanguage, t } from '@/i18n'
 import { session, logout } from '@/session'
@@ -59,7 +71,7 @@ import { ui } from '@/ui'
 const pw = reactive({ old: '', new: '' })
 const pwError = ref('')
 const pwSaving = ref(false)
-const installEvent = ref(window.__pwaInstall || null)
+const installEvent = ref(null)
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault()
   installEvent.value = e

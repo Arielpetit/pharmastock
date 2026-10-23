@@ -1,4 +1,4 @@
-<p align="center"><img src="frontend/public/logo.png" alt="PharmaStock" width="360"></p>
+<p align="center"><img src="docs/logo.png" alt="Pharmastock" width="380"></p>
 
 # PharmaStock
 
@@ -16,6 +16,15 @@ stock records underneath. English and French.
 | **Reports** | movements, expiry, stock levels; download for Excel, print |
 | **Staff** (admin) | add people, give the Staff or Administrator role, reset passwords, disable |
 | **Offline** | the app opens without internet; stock in/out and requests made offline are sent later, exactly once |
+
+## Design
+
+Soft and calm: warm paper background, white cards, midnight-ink pill buttons, one apothecary green.
+Newsreader (serif) for titles and figures, Figtree for text, IBM Plex Mono only for lot numbers and
+expiry stamps, printed like on a medicine box. The signature is the **blister pack**: the logo is a
+blister with one pill taken, and every medicine's stock is shown as a blister strip (filled pockets
+against three times the minimum level). Fonts are bundled, so the look holds offline.
+Screenshots: `docs/design/`.
 
 ## How it fits together
 

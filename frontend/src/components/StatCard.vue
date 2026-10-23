@@ -1,28 +1,22 @@
 <template>
-  <component :is="to ? 'RouterLink' : 'div'" :to="to"
-    class="card group flex flex-col gap-3 p-4 transition hover:border-outline-gray-3 hover:shadow-md">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-ink-gray-5">{{ label }}</span>
-      <span class="flex size-8 items-center justify-center rounded-4" :class="tones[tone].bg">
-        <span :class="[icon, tones[tone].fg]" class="size-4" />
+  <component :is="to ? 'RouterLink' : 'div'" :to="to" class="surface group flex flex-col p-4 transition md:p-5 hover:-translate-y-px hover:shadow-lift">
+    <div class="flex items-start justify-between gap-3">
+      <span class="text-[13px] font-medium text-ink-mute">{{ label }}</span>
+      <span class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="tones[tone]">
+        <span :class="icon" class="size-[15px]" />
       </span>
     </div>
-    <div class="flex items-baseline gap-2">
-      <span class="text-3xl font-semibold tracking-tight text-ink-gray-9 tabular">{{ value }}</span>
-      <span v-if="unit" class="text-sm text-ink-gray-5">{{ unit }}</span>
+    <div class="mt-4 font-display text-[36px] leading-none text-ink tabular md:mt-5 md:text-[44px]">{{ value }}</div>
+    <div class="mt-3 flex items-center gap-1.5 text-[13px]" :class="hintTone ? hintTones[hintTone] : 'text-ink-mute'">
+      <span v-if="hintTone" class="size-1.5 rounded-full bg-current" />{{ hint }}
     </div>
-    <div v-if="hint" class="text-sm" :class="hintClass || 'text-ink-gray-5'">{{ hint }}</div>
   </component>
 </template>
 
 <script setup>
-defineProps({ label: String, value: [String, Number], unit: String, icon: String, hint: String, hintClass: String, to: [String, Object],
-  tone: { type: String, default: 'teal' } })
-const tones = {
-  teal: { bg: 'bg-teal-50', fg: 'text-teal-700' },
-  blue: { bg: 'bg-blue-50', fg: 'text-blue-600' },
-  red: { bg: 'bg-red-50', fg: 'text-red-600' },
-  amber: { bg: 'bg-amber-50', fg: 'text-amber-600' },
-  violet: { bg: 'bg-violet-50', fg: 'text-violet-600' },
-}
+defineProps({ label: String, value: [String, Number], icon: String, hint: String, hintTone: String, to: [String, Object],
+  tone: { type: String, default: 'green' } })
+const tones = { green: 'bg-apo-soft text-apo', amber: 'bg-warn-soft text-warn', red: 'bg-alert-soft text-alert',
+  ink: 'bg-paper-deep text-ink-soft', blue: 'bg-[#E8EEF7] text-[#2F4E7A]' }
+const hintTones = { red: 'text-alert', amber: 'text-warn', green: 'text-apo' }
 </script>

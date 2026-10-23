@@ -10,21 +10,21 @@
           <div v-if="item.status === 'failed'" class="mt-1 text-sm text-ink-red-4">{{ item.error }}</div>
         </div>
         <Badge v-if="item.status === 'waiting'" theme="blue" :label="t('Waiting')" />
-        <Button v-else size="sm" theme="red" variant="subtle" :label="t('Discard')" @click="discard(item.id)" />
+        <Btn v-else size="sm" variant="danger" :label="t('Discard')" @click="discard(item.id)" />
       </li>
     </ul>
     <template #actions>
       <div class="flex w-full justify-end gap-2">
-        <Button :label="t('Close')" size="md" @click="ui.sync.open = false" />
-        <Button :label="t('Send now')" variant="solid" size="md" :disabled="!net.online" :loading="net.syncing" icon-left="lucide-upload"
-          @click="sendNow" />
+        <Btn variant="ghost" :label="t('Close')" @click="ui.sync.open = false" />
+        <Btn variant="primary" :label="t('Send now')" :disabled="!net.online" :loading="net.syncing" icon="lucide-upload" @click="sendNow" />
       </div>
     </template>
   </Dialog>
 </template>
 
 <script setup>
-import { Badge, Button, Dialog, toast } from 'frappe-ui'
+import { Badge, Dialog, toast } from 'frappe-ui'
+import Btn from './Btn.vue'
 import { net, flush, discard } from '@/api'
 import { t } from '@/i18n'
 import { num, date } from '@/format'

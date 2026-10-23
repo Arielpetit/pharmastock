@@ -8,18 +8,18 @@
           {{ t('Currently in stock: {0} {1}', num(picked.stock), picked.unit) }}
         </p>
       </div>
-      <FormControl v-model="form.qty" type="number" min="1" :label="t('Quantity received')" required size="md" />
-      <FormControl v-model="form.price" type="number" min="0" :label="t('Price per unit ({0})', session.currency)" size="md" />
-      <FormControl v-model="form.date" type="date" format="D MMM YYYY" :label="t('Date received')" required size="md" :max="today()" />
-      <FormControl v-model="form.expiry" type="date" format="D MMM YYYY" :label="t('Expiry date')" required size="md" :min="form.date" />
-      <FormControl v-model="form.lot" class="col-span-2" :label="t('Lot / batch number (optional)')"
-        :description="t('As printed on the box. Leave empty to number it automatically.')" size="md" />
+      <FormControl variant="outline" v-model="form.qty" type="number" min="1" :label="t('Quantity received')" required size="lg" />
+      <FormControl variant="outline" v-model="form.price" type="number" min="0" :label="t('Price per unit ({0})', session.currency)" size="lg" />
+      <FormControl variant="outline" v-model="form.date" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Date received')" required size="lg" :max="today()" />
+      <FormControl variant="outline" v-model="form.expiry" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Expiry date')" required size="lg" :min="form.date" />
+      <FormControl variant="outline" v-model="form.lot" class="col-span-2" :label="t('Lot / batch number (optional)')"
+        :description="t('As printed on the box. Leave empty to number it automatically.')" size="lg" />
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
       <div class="flex w-full justify-end gap-2">
-        <Button :label="t('Cancel')" size="md" @click="ui.addStock.open = false" />
-        <Button :label="t('Add stock')" variant="solid" size="md" :loading="saving" icon-left="lucide-check" @click="save" />
+        <Btn variant="ghost" :label="t('Cancel')" @click="ui.addStock.open = false" />
+        <Btn variant="primary" :label="t('Add stock')" :loading="saving" icon="lucide-check" @click="save" />
       </div>
     </template>
   </Dialog>
@@ -27,7 +27,8 @@
 
 <script setup>
 import { reactive, ref, watch } from 'vue'
-import { Button, Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import { Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import Btn from './Btn.vue'
 import MedicinePicker from './MedicinePicker.vue'
 import { write } from '@/api'
 import { t } from '@/i18n'

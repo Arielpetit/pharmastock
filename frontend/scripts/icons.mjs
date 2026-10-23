@@ -1,4 +1,5 @@
-// Renders the PWA icons and favicon from the SVG logo. Run: npm run icons
+// Renders the PWA icons and favicon from the SVG mark. Run: npm run icons
+// (the wordmark logo.png is rendered with the real fonts by scripts/wordmark.html in a browser)
 import sharp from 'sharp'
 import fs from 'fs'
 
@@ -10,7 +11,6 @@ const jobs = [
   [full, 512, 'public/icon-maskable-512.png'],
   [full, 180, 'public/apple-touch-icon.png'],
   [mark, 64, 'public/favicon.png'],
-  [Buffer.from(fs.readFileSync('public/logo.svg')), 1180, 'public/logo.png'],
 ]
 for (const [svg, size, out] of jobs) {
   await sharp(svg, { density: 384 }).resize(size).png().toFile(out)

@@ -9,24 +9,24 @@
           {{ t('In stock: {0} {1} · minimum {2}', num(picked.stock), picked.unit, num(picked.minimum)) }}
         </p>
       </div>
-      <FormControl v-model="form.qty" type="number" min="1" :label="t('Quantity needed')" required size="md" />
+      <FormControl variant="outline" v-model="form.qty" type="number" min="1" :label="t('Quantity needed')" required size="lg" />
       <div>
         <div class="mb-1.5 text-xs text-ink-gray-5">{{ t('Urgency') }}</div>
-        <div class="grid grid-cols-3 gap-1 rounded-4 bg-surface-gray-2 p-1">
+        <div class="grid grid-cols-3 gap-1 rounded-full border border-line bg-white p-1">
           <button v-for="u in urgencies" :key="u.value" type="button"
-            class="rounded-3 px-2 py-1.5 text-sm font-medium transition"
-            :class="form.urgency === u.value ? 'bg-surface-base shadow-sm ' + u.active : 'text-ink-gray-6 hover:text-ink-gray-8'"
+            class="rounded-full px-2 py-1.5 text-[13px] font-medium transition"
+            :class="form.urgency === u.value ? u.active : 'text-ink-mute hover:text-ink'"
             @click="form.urgency = u.value">{{ t(u.value) }}</button>
         </div>
       </div>
-      <FormControl v-model="form.reason" class="col-span-2" type="textarea" :rows="3" :label="t('Reason (optional)')"
-        :placeholder="t('e.g. Stock will run out next week')" size="md" />
+      <FormControl variant="outline" v-model="form.reason" class="col-span-2" type="textarea" :rows="3" :label="t('Reason (optional)')"
+        :placeholder="t('e.g. Stock will run out next week')" size="lg" />
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
       <div class="flex w-full justify-end gap-2">
-        <Button :label="t('Cancel')" size="md" @click="ui.request.open = false" />
-        <Button :label="t('Send request')" variant="solid" size="md" :loading="saving" icon-left="lucide-send" @click="save" />
+        <Btn variant="ghost" :label="t('Cancel')" @click="ui.request.open = false" />
+        <Btn variant="primary" :label="t('Send request')" :loading="saving" icon="lucide-send" @click="save" />
       </div>
     </template>
   </Dialog>
@@ -34,7 +34,8 @@
 
 <script setup>
 import { reactive, ref, watch } from 'vue'
-import { Button, Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import { Dialog, ErrorMessage, FormControl, toast } from 'frappe-ui'
+import Btn from './Btn.vue'
 import MedicinePicker from './MedicinePicker.vue'
 import { write } from '@/api'
 import { t } from '@/i18n'
@@ -42,9 +43,9 @@ import { num } from '@/format'
 import { ui, changed } from '@/ui'
 
 const urgencies = [
-  { value: 'Routine', active: 'text-ink-gray-9' },
-  { value: 'Urgent', active: 'text-amber-700' },
-  { value: 'Emergency', active: 'text-red-600' },
+  { value: 'Routine', active: 'bg-ink text-white' },
+  { value: 'Urgent', active: 'bg-warn-soft text-warn' },
+  { value: 'Emergency', active: 'bg-alert-soft text-alert' },
 ]
 const blank = () => ({ medicine: ui.request.medicine, qty: ui.request.qty || '', urgency: 'Routine', reason: '' })
 const form = reactive(blank())

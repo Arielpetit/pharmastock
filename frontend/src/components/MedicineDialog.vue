@@ -3,18 +3,18 @@
     :message="editing ? '' : t('Add the medicine to your list and, if you have it, its first stock.')"
     icon="lucide-pill" theme="green" size="2xl">
     <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
-      <FormControl v-model="form.name" class="col-span-2" :label="t('Medicine name')" required size="md"
+      <FormControl variant="outline" v-model="form.name" class="col-span-2" :label="t('Medicine name')" required size="lg"
         :placeholder="t('e.g. Paracetamol 500mg')" />
-      <FormControl v-model="form.category" type="select" :options="opt(session.options.categories)" :label="t('Category')"
-        required size="md" :placeholder="t('Choose…')" />
-      <FormControl v-model="form.form" type="select" :options="opt(session.options.forms)" :label="t('Dosage form')"
-        size="md" :placeholder="t('Choose…')" />
-      <FormControl v-model="form.strength" :label="t('Strength')" size="md" :placeholder="t('e.g. 500mg')" />
-      <FormControl v-model="form.unit" type="select" :options="opt(session.options.units)" :label="t('Counted in')" required
-        size="md" :disabled="editing" :description="editing ? '' : t('The unit you count when giving out.')" />
-      <FormControl v-model="form.minimum" type="number" min="0" :label="t('Minimum stock (alert level)')" size="md"
+      <FormControl variant="outline" v-model="form.category" type="select" :options="opt(session.options.categories)" :label="t('Category')"
+        required size="lg" :placeholder="t('Choose…')" />
+      <FormControl variant="outline" v-model="form.form" type="select" :options="opt(session.options.forms)" :label="t('Dosage form')"
+        size="lg" :placeholder="t('Choose…')" />
+      <FormControl variant="outline" v-model="form.strength" :label="t('Strength')" size="lg" :placeholder="t('e.g. 500mg')" />
+      <FormControl variant="outline" v-model="form.unit" type="select" :options="opt(session.options.units)" :label="t('Counted in')" required
+        size="lg" :disabled="editing" :description="editing ? '' : t('The unit you count when giving out.')" />
+      <FormControl variant="outline" v-model="form.minimum" type="number" min="0" :label="t('Minimum stock (alert level)')" size="lg"
         :description="t('You are alerted when stock falls to this level.')" />
-      <FormControl v-model="form.location" :label="t('Storage location')" size="md" :placeholder="t('e.g. Shelf A2')" />
+      <FormControl variant="outline" v-model="form.location" :label="t('Storage location')" size="lg" :placeholder="t('e.g. Shelf A2')" />
 
       <template v-if="!editing">
         <div class="col-span-2 mt-1 flex items-center gap-3">
@@ -22,19 +22,18 @@
           <span class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ t('Starting stock (optional)') }}</span>
           <div class="h-px flex-1 bg-outline-gray-1" />
         </div>
-        <FormControl v-model="form.qty" type="number" min="0" :label="t('Quantity received')" size="md" />
-        <FormControl v-model="form.price" type="number" min="0" :label="t('Price per unit ({0})', session.currency)" size="md" />
-        <FormControl v-model="form.date" type="date" format="D MMM YYYY" :label="t('Date received')" size="md" :max="today()" />
-        <FormControl v-model="form.expiry" type="date" format="D MMM YYYY" :label="t('Expiry date')" size="md" :min="form.date"
+        <FormControl variant="outline" v-model="form.qty" type="number" min="0" :label="t('Quantity received')" size="lg" />
+        <FormControl variant="outline" v-model="form.price" type="number" min="0" :label="t('Price per unit ({0})', session.currency)" size="lg" />
+        <FormControl variant="outline" v-model="form.date" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Date received')" size="lg" :max="today()" />
+        <FormControl variant="outline" v-model="form.expiry" type="date" format="D MMM YYYY" :placeholder="t('Select a date')" :label="t('Expiry date')" size="lg" :min="form.date"
           :required="Number(form.qty) > 0" />
       </template>
       <ErrorMessage class="col-span-2" :message="error" />
     </form>
     <template #actions>
       <div class="flex w-full justify-end gap-2">
-        <Button :label="t('Cancel')" size="md" @click="ui.medicine.open = false" />
-        <Button :label="editing ? t('Save changes') : t('Add medicine')" variant="solid" size="md" :loading="saving"
-          icon-left="lucide-check" @click="save" />
+        <Btn variant="ghost" :label="t('Cancel')" @click="ui.medicine.open = false" />
+        <Btn variant="primary" :label="editing ? t('Save changes') : t('Add medicine')" :loading="saving" icon="lucide-check" @click="save" />
       </div>
     </template>
   </Dialog>
@@ -43,7 +42,8 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button, Dialog, ErrorMessage, FormControl, toast, dialog } from 'frappe-ui'
+import { Dialog, ErrorMessage, FormControl, toast, dialog } from 'frappe-ui'
+import Btn from './Btn.vue'
 import { get, post, ApiError } from '@/api'
 import { t } from '@/i18n'
 import { num, today } from '@/format'

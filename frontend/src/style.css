@@ -1,31 +1,118 @@
+@import '@fontsource-variable/newsreader/opsz.css';
+@import '@fontsource-variable/newsreader/opsz-italic.css';
+@import '@fontsource-variable/figtree/index.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
 @import 'frappe-ui/style.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-body {
-  @apply bg-surface-gray-1 text-ink-gray-8 antialiased;
-  -webkit-tap-highlight-color: transparent;
+/* frappe-ui colour variables, warmed to sit on paper instead of cold grey */
+:root {
+  --surface-gray-1: #f8f7f4;
+  --surface-gray-2: #f3f2ee;
+  --surface-gray-3: #ecebe6;
+  --surface-gray-4: #e1dfd8;
+  --surface-sidebar: #ffffff;
+  --ink-gray-4: #a9aaad;
+  --ink-gray-5: #8b8d93;
+  --ink-gray-6: #66686f;
+  --ink-gray-7: #4b4e56;
+  --ink-gray-8: #26282e;
+  --ink-gray-9: #16181d;
+  --outline-gray-1: #eeece6;
+  --outline-gray-2: #e3e1da;
+  --outline-gray-3: #d3d0c7;
+  --outline-gray-4: #b3b0a7;
+  --outline-elevation-1: #eeece6;
+  --outline-elevation-2: #e3e1da;
+  --surface-gray-10: #16181d;
 }
 
+html,
+body {
+  @apply bg-paper text-ink antialiased;
+  font-family: 'Figtree Variable', system-ui, sans-serif;
+  font-feature-settings: 'ss01';
+  -webkit-tap-highlight-color: transparent;
+}
+body * {
+  font-family: inherit;
+}
+.font-display {
+  font-family: 'Newsreader Variable', Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+  font-weight: 450;
+}
+.font-label {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  letter-spacing: 0;
+}
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+.eyebrow {
+  @apply text-[11px] font-semibold uppercase text-ink-mute;
+  letter-spacing: 0.14em;
+}
+
+/* softer, rounder inputs everywhere (frappe-ui inputs, comboboxes, selects, date pickers) */
+input.form-input,
+textarea.form-textarea,
+.form-input,
+.form-textarea,
+button[role='combobox'],
+[role='combobox'] input {
+  border-radius: 10px !important;
+}
+
+/* dialog titles in the display serif, like page titles */
+[role='dialog'] header h3 {
+  font-family: 'Newsreader Variable', Georgia, serif !important;
+  font-size: 24px !important;
+  font-weight: 450 !important;
+  letter-spacing: -0.015em;
+}
+
+.surface {
+  @apply rounded-[18px] border border-line bg-white shadow-card;
 }
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
-
-.brand-gradient {
-  background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
-}
-
-.card {
-  @apply rounded-6 border border-outline-gray-1 bg-surface-base shadow-sm;
-}
-
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+:focus-visible {
+  outline: 2px solid #4d8b74;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
+@media print {
+  aside,
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
 }

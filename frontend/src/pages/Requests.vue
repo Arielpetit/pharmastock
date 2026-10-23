@@ -1,53 +1,55 @@
 <template>
   <div>
-    <PageHeader :title="t('Stock requests')"
+    <PageHeader :eyebrow="t('Ordering')" :title="t('Stock requests')"
       :subtitle="session.isAdmin ? t('Approve or reject what your team asks for.') : t('Ask for medicines you need before ordering.')">
       <template #actions>
-        <Button size="md" variant="solid" icon-left="lucide-plus" :label="t('New request')" class="!bg-[#0f766e] hover:!bg-[#115e59]"
-          @click="openRequest()" />
+        <Btn variant="primary" icon="lucide-plus" :label="t('New request')" @click="openRequest()" />
       </template>
     </PageHeader>
 
-    <div class="mb-4 flex items-start gap-3 rounded-6 bg-blue-50 p-4 text-sm text-blue-900">
-      <span class="lucide-info mt-0.5 size-4 shrink-0 text-blue-600" />
+    <div class="mb-5 flex items-start gap-3 rounded-[16px] border border-line bg-white/60 px-4 py-3.5 text-[13.5px] text-ink-soft">
+      <span class="lucide-info mt-0.5 size-4 shrink-0 text-apo" />
       <p>{{ t('A request means "we need it". Stock only goes up when the delivery arrives and someone records it with Add stock.') }}</p>
     </div>
 
-    <div class="scrollbar-none -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
-      <button v-for="s in tabs" :key="s.value" class="flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition"
-        :class="status === s.value ? 'border-teal-600 bg-teal-600 text-white' : 'border-outline-gray-2 bg-surface-base text-ink-gray-6 hover:border-outline-gray-3'"
+    <div class="scrollbar-none -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
+      <button v-for="s in tabs" :key="s.value" class="flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition"
+        :class="status === s.value ? 'border-ink bg-ink text-white' : 'border-line bg-white text-ink-soft hover:border-line-strong hover:text-ink'"
         @click="status = s.value">
-        {{ t(s.label) }} <span class="tabular opacity-70">{{ count(s.value) }}</span>
+        {{ t(s.label) }} <span class="tabular" :class="status === s.value ? 'text-white/60' : 'text-ink-faint'">{{ count(s.value) }}</span>
       </button>
     </div>
 
-    <div v-if="!rows" class="card divide-y divide-outline-gray-1"><div v-for="i in 4" :key="i" class="h-20 animate-pulse" /></div>
-    <div v-else-if="!shown.length" class="card">
-      <EmptyState icon="lucide-clipboard-list" :title="t('No requests here')" :text="t('Requests you send appear in this list.')" />
+    <div v-if="!rows" class="space-y-2.5"><div v-for="i in 4" :key="i" class="surface h-24 animate-pulse" /></div>
+    <div v-else-if="!shown.length" class="surface">
+      <EmptyState icon="lucide-clipboard-list" :title="t('No requests here')" :text="t('Requests you send appear in this list.')">
+        <Btn variant="primary" icon="lucide-plus" :label="t('New request')" @click="openRequest()" />
+      </EmptyState>
     </div>
-    <ul v-else class="space-y-2">
-      <li v-for="r in shown" :key="r.name" class="card p-4">
-        <div class="flex flex-wrap items-start gap-3">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-4" :class="urgencyTone(r.urgency)">
-            <span :class="r.automatic ? 'lucide-bot' : 'lucide-clipboard-list'" class="size-5" />
+    <ul v-else class="space-y-2.5">
+      <li v-for="r in shown" :key="r.name" class="surface p-4 md:p-5">
+        <div class="flex flex-wrap items-start gap-4">
+          <div class="flex size-11 shrink-0 items-center justify-center rounded-full" :class="urgencyTone(r.urgency, r.automatic)">
+            <span :class="r.automatic ? 'lucide-repeat' : 'lucide-clipboard-list'" class="size-[18px]" />
           </div>
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-base font-semibold text-ink-gray-9">{{ r.medicine_name || r.medicine }}</span>
-              <span class="text-base font-semibold tabular text-ink-gray-7">× {{ num(r.qty) }}</span>
-              <Badge v-if="r.urgency && r.urgency !== 'Routine'" :theme="r.urgency === 'Emergency' ? 'red' : 'amber'" :label="t(r.urgency)" size="sm" />
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span class="text-[15px] font-semibold text-ink">{{ r.medicine_name || r.medicine }}</span>
+              <span class="font-display text-[19px] leading-none text-ink-soft tabular">× {{ num(r.qty) }}</span>
+              <span v-if="r.urgency && r.urgency !== 'Routine'" class="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                :class="r.urgency === 'Emergency' ? 'bg-alert-soft text-alert' : 'bg-warn-soft text-warn'">{{ t(r.urgency) }}</span>
             </div>
-            <div class="mt-1 text-sm text-ink-gray-5">
+            <div class="mt-1 text-[12.5px] text-ink-mute">
               {{ r.requested_by }} · {{ date(r.date) }} · {{ t('needed by {0}', date(r.needed_by)) }}
             </div>
-            <p v-if="r.reason" class="mt-2 text-sm text-ink-gray-7">“{{ r.reason }}”</p>
-            <p v-if="r.note" class="mt-1 text-sm text-ink-gray-5">{{ t('Note') }}: {{ r.note }}</p>
+            <p v-if="r.reason" class="mt-2.5 font-display text-[16px] italic leading-snug text-ink-soft">“{{ r.reason }}”</p>
+            <p v-if="r.note" class="mt-2 text-[12.5px] text-ink-mute"><span class="font-semibold">{{ t('Note') }}:</span> {{ r.note }}</p>
           </div>
-          <div class="flex flex-col items-end gap-2">
+          <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:flex-col sm:items-end">
             <StatusBadge :status="r.state" />
             <div v-if="session.isAdmin && r.state === 'pending'" class="flex gap-2">
-              <Button size="sm" theme="red" variant="subtle" :label="t('Reject')" @click="decide(r, 'reject')" />
-              <Button size="sm" variant="solid" :label="t('Approve')" class="!bg-[#0f766e] hover:!bg-[#115e59]" @click="decide(r, 'approve')" />
+              <Btn size="sm" variant="danger" :label="t('Reject')" @click="decide(r, 'reject')" />
+              <Btn size="sm" variant="brand" icon="lucide-check" :label="t('Approve')" @click="decide(r, 'approve')" />
             </div>
           </div>
         </div>
@@ -59,7 +61,8 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Badge, Button, dialog, toast } from 'frappe-ui'
+import { dialog, toast } from 'frappe-ui'
+import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -81,7 +84,7 @@ const tabs = [
 ]
 const shown = computed(() => (rows.value || []).filter((r) => status.value === 'all' || r.state === status.value))
 const count = (s) => (rows.value || []).filter((r) => s === 'all' || r.state === s).length
-const urgencyTone = (u) => (u === 'Emergency' ? 'bg-red-50 text-red-600' : u === 'Urgent' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600')
+const urgencyTone = (u, auto) => (auto ? 'bg-paper-deep text-ink-soft' : u === 'Emergency' ? 'bg-alert-soft text-alert' : u === 'Urgent' ? 'bg-warn-soft text-warn' : 'bg-apo-soft text-apo')
 
 watch(status, () => router.replace({ query: status.value === 'all' ? {} : { status: status.value } }))
 

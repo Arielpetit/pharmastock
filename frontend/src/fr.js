@@ -35,6 +35,19 @@ export default {
   'Approve or reject them.': 'Approuvez-les ou refusez-les.',
 
   // login
+  'Pharmacy space': 'Espace pharmacie',
+  'Sign in': 'Connexion',
+  'Every box on the shelf,': 'Chaque boîte en rayon,',
+  'counted.': 'comptée.',
+  'For pharmacy staff only. Every stock movement is recorded under your name.':
+    'Réservé au personnel de la pharmacie. Chaque mouvement de stock est enregistré à votre nom.',
+  'Show password': 'Afficher le mot de passe',
+  'Hide password': 'Masquer le mot de passe',
+  Pharmacy: 'Pharmacie',
+  'A delivery just arrived?': 'Une livraison vient d’arriver\u00a0?',
+  'Record it in a few seconds.': 'Enregistrez-la en quelques secondes.',
+  '{0} in stock, minimum {1}': '{0} en stock, minimum {1}',
+  Exp: 'Exp',
   'Your pharmacy stock, simple and always up to date.': 'Le stock de votre pharmacie, simple et toujours à jour.',
   'Know what is on the shelf at any time': 'Sachez à tout moment ce qui est en rayon',
   'See expiring medicines before it is too late': 'Repérez les médicaments qui expirent avant qu’il ne soit trop tard',
@@ -52,6 +65,11 @@ export default {
   'Could not log in.': 'Connexion impossible.',
 
   // dashboard
+  '{0} medicine(s) to restock': '{0} médicament(s) à réapprovisionner',
+  '{0} expiring soon': '{0} expire(nt) bientôt',
+  '{0} request(s) to approve': '{0} demande(s) à approuver',
+  'give these out first': 'à sortir en premier',
+  'Everything is in order today.': 'Tout est en ordre aujourd’hui.',
   'Good morning': 'Bonjour',
   'Good afternoon': 'Bon après-midi',
   'Good evening': 'Bonsoir',
@@ -87,6 +105,11 @@ export default {
   'Stock you add or give out appears here.': 'Le stock ajouté ou sorti apparaît ici.',
 
   // medicines
+  Inventory: 'Inventaire',
+  Ordering: 'Commandes',
+  Records: 'Registres',
+  Team: 'Équipe',
+  Settings: 'Paramètres',
   '{0} medicines on your list': '{0} médicaments dans votre liste',
   'New medicine': 'Nouveau médicament',
   'Search by name…': 'Rechercher par nom…',
@@ -179,6 +202,7 @@ export default {
   'Search a medicine…': 'Rechercher un médicament…',
   'No medicine found': 'Aucun médicament trouvé',
   'Loading…': 'Chargement…',
+  'Select a date': 'Choisir une date',
 
   // give out
   'Record medicine leaving the store, for example given to a patient.':
