@@ -41,7 +41,7 @@
         <EmptyState v-if="!d.log.length" icon="lucide-bell" :title="t('No notifications yet')"
           :text="t('Expiry reminders and request updates appear here.')" />
         <ul v-else>
-          <li v-for="n in d.log" :key="n.name" class="flex items-start gap-3 border-b border-line/70 px-5 py-3.5 last:border-0"
+          <li v-for="n in paged.items.value" :key="n.name" class="flex items-start gap-3 border-b border-line/70 px-5 py-3.5 last:border-0"
             :class="!n.read && 'bg-apo-mist/60'">
             <span class="mt-1.5 size-2 shrink-0 rounded-full" :class="n.read ? 'bg-transparent' : 'bg-apo'" />
             <div class="min-w-0 flex-1">
@@ -51,6 +51,7 @@
           </li>
         </ul>
       </div>
+      <Pager v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
     </template>
   </div>
 </template>
@@ -60,12 +61,16 @@ import { computed, onMounted } from 'vue'
 import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import Pager from '@/components/Pager.vue'
+import { usePaged } from '@/paging'
 import { alerts, loadAlerts, markAllRead } from '@/alerts'
 import { t } from '@/i18n'
 import { date, num } from '@/format'
 import { openRequest } from '@/ui'
 
 const d = computed(() => alerts.data)
+const log = computed(() => alerts.data?.log || [])
+const paged = usePaged(log, 10)
 const med = (code) => `/medicines/${encodeURIComponent(code)}`
 
 const groups = computed(() => {

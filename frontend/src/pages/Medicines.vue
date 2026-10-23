@@ -53,7 +53,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="m in filtered" :key="m.code" class="group cursor-pointer border-b border-line/70 transition last:border-0 hover:bg-paper/60" @click="open(m)">
+            <tr v-for="m in paged.items.value" :key="m.code" class="group cursor-pointer border-b border-line/70 transition last:border-0 hover:bg-paper/60" @click="open(m)">
               <td class="py-4 pl-6 pr-3">
                 <div class="text-[14.5px] font-semibold text-ink">{{ m.name }}</div>
                 <div class="mt-0.5 text-[12.5px] text-ink-mute">{{ [t(m.category), m.strength, t(m.form || '')].filter(Boolean).join(' · ') }}</div>
@@ -82,7 +82,7 @@
 
       <!-- mobile cards -->
       <ul class="space-y-2.5 md:hidden">
-        <li v-for="m in filtered" :key="m.code" class="surface p-4 active:bg-paper" @click="open(m)">
+        <li v-for="m in paged.items.value" :key="m.code" class="surface p-4 active:bg-paper" @click="open(m)">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <div class="truncate text-[15px] font-semibold text-ink">{{ m.name }}</div>
@@ -102,6 +102,7 @@
           </div>
         </li>
       </ul>
+      <Pager v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
     </template>
   </div>
 </template>
@@ -116,6 +117,8 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
+import Pager from '@/components/Pager.vue'
+import { usePaged } from '@/paging'
 import { get } from '@/api'
 import { t } from '@/i18n'
 import { num } from '@/format'
@@ -155,6 +158,7 @@ const base = computed(() => {
     (!expiryBefore.value || (m.nearest_expiry && m.nearest_expiry <= expiryBefore.value)))
 })
 const filtered = computed(() => base.value.filter((m) => match(m, status.value)))
+const paged = usePaged(filtered, 12)
 const counts = computed(() => Object.fromEntries(statuses.map((s) => [s.value, base.value.filter((m) => match(m, s.value)).length])))
 const open = (m) => router.push({ name: 'medicine', params: { code: m.code } })
 

@@ -78,6 +78,10 @@ export default {
   '6–12 mo': '6–12 mois',
   '> 1 yr': '> 1 an',
   // notifications and shell
+  '{0}–{1} of {2}': '{0}–{1} sur {2}',
+  Pages: 'Pages',
+  'Previous page': 'Page précédente',
+  'Next page': 'Page suivante',
   Notifications: 'Notifications',
   Inbox: 'Boîte de réception',
   'What needs your attention, and what happened recently.': 'Ce qui demande votre attention, et ce qui s’est passé récemment.',

@@ -48,7 +48,7 @@
           <th class="px-3 py-3.5 font-medium">{{ t('Lot') }}</th><th class="px-3 py-3.5 font-medium">{{ t('By') }}</th>
           <th class="py-3.5 pl-3 pr-6 text-right font-medium">{{ t('Balance') }}</th></tr></thead>
         <tbody>
-          <tr v-for="(r, i) in movements" :key="i" class="border-b border-line/70 last:border-0">
+          <tr v-for="(r, i) in paged.items.value" :key="i" class="border-b border-line/70 last:border-0">
             <td class="whitespace-nowrap py-3 pl-6 pr-3 text-ink-mute">{{ date(r.date) }}</td>
             <td class="px-3 py-3 font-semibold text-ink">{{ r.medicine_name }}</td>
             <td class="px-3 py-3 text-right font-display text-[17px] tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">
@@ -67,7 +67,7 @@
           <th class="px-3 py-3.5 font-medium">{{ t('Expiry date') }}</th><th class="px-3 py-3.5 font-medium">{{ t('Time left') }}</th>
           <th class="px-3 py-3.5 text-right font-medium">{{ t('Quantity') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Location') }}</th></tr></thead>
         <tbody>
-          <tr v-for="r in expiry" :key="r.batch" class="border-b border-line/70 last:border-0" :class="r.expired && 'bg-alert-soft/40'">
+          <tr v-for="r in paged.items.value" :key="r.batch" class="border-b border-line/70 last:border-0" :class="r.expired && 'bg-alert-soft/40'">
             <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.medicine_name }}</td>
             <td class="font-label px-3 py-3 text-[11.5px] text-ink-mute">{{ r.batch }}</td>
             <td class="px-3 py-3 text-ink-soft">{{ date(r.expiry_date) }}</td>
@@ -84,7 +84,7 @@
           <th class="px-3 py-3.5 font-medium">{{ t('In stock') }}</th><th class="px-3 py-3.5 text-right font-medium">{{ t('Minimum') }}</th>
           <th class="px-3 py-3.5 font-medium">{{ t('Nearest expiry') }}</th><th class="py-3.5 pl-3 pr-6 font-medium">{{ t('Status') }}</th></tr></thead>
         <tbody>
-          <tr v-for="r in stock" :key="r.code" class="border-b border-line/70 last:border-0">
+          <tr v-for="r in paged.items.value" :key="r.code" class="border-b border-line/70 last:border-0">
             <td class="py-3 pl-6 pr-3 font-semibold text-ink">{{ r.name }}</td>
             <td class="px-3 py-3 text-ink-soft">{{ t(r.category) }}</td>
             <td class="px-3 py-3">
@@ -98,6 +98,7 @@
         </tbody>
       </table>
     </div>
+    <Pager v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
   </div>
 </template>
 
@@ -112,6 +113,8 @@ import ExpiryChip from '@/components/ExpiryChip.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
 import MedicinePicker from '@/components/MedicinePicker.vue'
+import Pager from '@/components/Pager.vue'
+import { usePaged } from '@/paging'
 import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, downloadCsv, num, today } from '@/format'
@@ -139,6 +142,8 @@ const loading = ref(false)
 
 const stock = computed(() => (stockFilter.value === 'low' ? allStock.value.filter((r) => r.is_low || r.is_out) : allStock.value))
 const current = computed(() => (tab.value === 'movements' ? movements.value : tab.value === 'expiry' ? expiry.value : stock.value))
+
+const paged = usePaged(current, 15)
 
 async function load() {
   loading.value = true

@@ -27,7 +27,7 @@
       </EmptyState>
     </div>
     <ul v-else class="space-y-2.5">
-      <li v-for="r in shown" :key="r.name" class="surface p-4 md:p-5">
+      <li v-for="r in paged.items.value" :key="r.name" class="surface p-4 md:p-5">
         <div class="flex flex-wrap items-start gap-4">
           <div class="flex size-11 shrink-0 items-center justify-center rounded-full" :class="urgencyTone(r.urgency, r.automatic)">
             <span :class="r.automatic ? 'lucide-repeat' : 'lucide-clipboard-list'" class="size-[18px]" />
@@ -55,6 +55,7 @@
         </div>
       </li>
     </ul>
+    <Pager v-if="shown.length" v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
   </div>
 </template>
 
@@ -66,6 +67,8 @@ import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import Pager from '@/components/Pager.vue'
+import { usePaged } from '@/paging'
 import { get, post } from '@/api'
 import { t } from '@/i18n'
 import { date, num } from '@/format'
@@ -83,6 +86,7 @@ const tabs = [
   { value: 'rejected', label: 'Rejected' },
 ]
 const shown = computed(() => (rows.value || []).filter((r) => status.value === 'all' || r.state === status.value))
+const paged = usePaged(shown, 8)
 const count = (s) => (rows.value || []).filter((r) => s === 'all' || r.state === s).length
 const urgencyTone = (u, auto) => (auto ? 'bg-paper-deep text-ink-soft' : u === 'Emergency' ? 'bg-alert-soft text-alert' : u === 'Urgent' ? 'bg-warn-soft text-warn' : 'bg-apo-soft text-apo')
 
