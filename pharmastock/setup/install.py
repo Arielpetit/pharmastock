@@ -65,7 +65,13 @@ def erpnext_ready():
 
 def after_setup_wizard(args=None):
 	"""On a site where the app was installed before the setup wizard, finish the setup now."""
-	after_install()
+	try:
+		after_install()
+	except frappe.ValidationError:
+		# e.g. the new company has no Default Inventory Account yet: never block the setup wizard on it
+		frappe.log_error("PharmaStock setup after the wizard")
+		print("PharmaStock: setup could not finish inside the wizard. After it, run: "
+			  "bench --site <site> execute pharmastock.setup.install.after_install")
 
 
 def create_roles():
