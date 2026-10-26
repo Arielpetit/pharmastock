@@ -298,9 +298,9 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 
 
 @frappe.whitelist(methods=["POST"])
-@_writes(admin=True)
+@_writes(admin=False)
 def delete_medicine(code):
-	"""Remove a medicine from the list (administrators only).
+	"""Remove a medicine from the list (pharmacy staff and administrators).
 
 	A medicine that still has stock cannot be removed. One that was never used is deleted. One with
 	history is archived instead (disabled), because ERPNext must keep its stock ledger; it disappears

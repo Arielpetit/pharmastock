@@ -16,7 +16,7 @@
         </template>
         <template #actions>
           <Btn variant="ghost" icon="lucide-pencil" :label="t('Edit')" @click="openMedicine(m.code)" />
-          <Btn v-if="session.isAdmin" variant="ghost" icon="lucide-trash-2" :label="t('Delete')" @click="confirmDelete" />
+          <Btn variant="ghost" icon="lucide-trash-2" :label="t('Delete')" @click="confirmDelete" />
           <Btn icon="lucide-clipboard-list" :label="t('Request')" @click="openRequest(m.code, Math.max(m.minimum * 2 - m.stock, 1))" />
           <Btn icon="lucide-hand-heart" :label="t('Give out')" :to="{ path: '/give-out', query: { medicine: m.code } }" />
           <Btn variant="primary" icon="lucide-plus" :label="t('Add stock')" @click="openAddStock(m.code)" />
@@ -123,7 +123,6 @@ import EmptyState from '@/components/EmptyState.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
 import { get, post } from '@/api'
-import { session } from '@/session'
 import { t } from '@/i18n'
 import { date, num } from '@/format'
 import { ui, changed, openAddStock, openMedicine, openRequest } from '@/ui'
