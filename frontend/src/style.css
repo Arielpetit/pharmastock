@@ -27,13 +27,13 @@
   --ps-apo-soft: 229 238 233;
   --ps-apo-mist: 241 246 243;
   --ps-on-apo: 255 255 255;
-  --ps-warn: 158 92 21;
-  --ps-warn-mid: 222 165 96;
-  --ps-warn-soft: 248 238 223;
+  --ps-warn: 166 56 47;
+  --ps-warn-mid: 200 110 100;
+  --ps-warn-soft: 248 231 228;
   --ps-alert: 166 56 47;
   --ps-alert-soft: 248 231 228;
-  --ps-info: 47 78 122;
-  --ps-info-soft: 232 238 247;
+  --ps-info: 70 73 81;
+  --ps-info-soft: 239 237 231;
   --ps-shadow: 22 24 29;
 
   /* frappe-ui variables, warmed to sit on paper */
@@ -79,13 +79,13 @@
   --ps-apo-soft: 33 56 47;
   --ps-apo-mist: 27 42 36;
   --ps-on-apo: 14 30 24;
-  --ps-warn: 232 172 98;
-  --ps-warn-mid: 200 146 82;
-  --ps-warn-soft: 58 45 27;
+  --ps-warn: 238 132 120;
+  --ps-warn-mid: 200 110 100;
+  --ps-warn-soft: 62 33 30;
   --ps-alert: 238 132 120;
   --ps-alert-soft: 62 33 30;
-  --ps-info: 146 178 224;
-  --ps-info-soft: 31 41 57;
+  --ps-info: 200 198 191;
+  --ps-info-soft: 34 35 32;
   --ps-shadow: 0 0 0;
 
   --surface-base: #1c1d1b;

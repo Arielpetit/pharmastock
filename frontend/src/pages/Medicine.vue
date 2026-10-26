@@ -16,6 +16,7 @@
         </template>
         <template #actions>
           <Btn variant="ghost" icon="lucide-pencil" :label="t('Edit')" @click="openMedicine(m.code)" />
+          <Btn v-if="session.isAdmin" variant="ghost" icon="lucide-trash-2" :label="t('Delete')" @click="confirmDelete" />
           <Btn icon="lucide-clipboard-list" :label="t('Request')" @click="openRequest(m.code, Math.max(m.minimum * 2 - m.stock, 1))" />
           <Btn icon="lucide-hand-heart" :label="t('Give out')" :to="{ path: '/give-out', query: { medicine: m.code } }" />
           <Btn variant="primary" icon="lucide-plus" :label="t('Add stock')" @click="openAddStock(m.code)" />
@@ -112,7 +113,8 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { toast } from 'frappe-ui'
+import { toast, dialog } from 'frappe-ui'
+import { useRouter } from 'vue-router'
 import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Panel from '@/components/Panel.vue'
@@ -120,10 +122,11 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
-import { get } from '@/api'
+import { get, post } from '@/api'
+import { session } from '@/session'
 import { t } from '@/i18n'
 import { date, num } from '@/format'
-import { ui, openAddStock, openMedicine, openRequest } from '@/ui'
+import { ui, changed, openAddStock, openMedicine, openRequest } from '@/ui'
 
 const props = defineProps({ code: String })
 const m = ref(null)
@@ -135,6 +138,25 @@ async function load() {
   } catch (e) {
     toast.error(e.message)
   }
+}
+
+const router = useRouter()
+function confirmDelete() {
+  dialog.danger({
+    title: t('Delete {0}?', m.value.name),
+    message: t('It disappears from the medicine list. Its past movements stay in the records.'),
+    confirmLabel: t('Delete'),
+    onConfirm: async () => {
+      try {
+        await post('delete_medicine', { code: m.value.code })
+        toast.success(t('{0} was deleted', m.value.name))
+        router.push('/medicines')
+        changed()
+      } catch (e) {
+        toast.error(e.message)
+      }
+    },
+  })
 }
 onMounted(load)
 watch(() => ui.version, load)

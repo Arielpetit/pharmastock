@@ -261,6 +261,15 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 	reorder = [{"warehouse": wh, "warehouse_reorder_level": flt(minimum), "warehouse_reorder_qty": max(flt(minimum) * 2, 1),
 				"material_request_type": "Purchase"}]
 
+	restored = False
+	if not code:
+		existing = frappe.db.get_value("Item", name, ["name", "disabled"]) or frappe.db.get_value("Item", {"item_name": name}, ["name", "disabled"])
+		if existing and not existing[1]:
+			frappe.throw(_("{0} already exists. Open it and use Add Stock instead.").format(name), frappe.DuplicateEntryError)
+		if existing:  # removed earlier (see delete_medicine): bring it back with the new details
+			frappe.db.set_value("Item", existing[0], "disabled", 0)
+			code, restored = existing[0], True
+
 	if code:
 		item = frappe.get_doc("Item", code)
 		item.update({"item_name": name, "item_group": category, "custom_dosage_form": form, "custom_strength": strength,
@@ -268,10 +277,10 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 		item.set("reorder_levels", reorder if flt(minimum) else [])
 		item.flags.ignore_permissions = True
 		item.save()
-		return {"code": item.name}
-
-	if frappe.db.exists("Item", name) or frappe.db.exists("Item", {"item_name": name}):
-		frappe.throw(_("{0} already exists. Open it and use Add Stock instead.").format(name), frappe.DuplicateEntryError)
+		out = {"code": item.name}
+		if restored and flt(qty) > 0:
+			out["stock_entry"] = add_stock(item.name, qty, price, date, expiry, lot)["stock_entry"]
+		return out
 
 	item = frappe.get_doc({
 		"doctype": "Item", "owner": _owner(), "item_code": name, "item_name": name, "item_group": category, "stock_uom": unit,
@@ -286,6 +295,31 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 	if flt(qty) > 0:
 		out["stock_entry"] = add_stock(item.name, qty, price, date, expiry, lot)["stock_entry"]
 	return out
+
+
+@frappe.whitelist(methods=["POST"])
+@_writes(admin=True)
+def delete_medicine(code):
+	"""Remove a medicine from the list (administrators only).
+
+	A medicine that still has stock cannot be removed. One that was never used is deleted. One with
+	history is archived instead (disabled), because ERPNext must keep its stock ledger; it disappears
+	from every list, and adding the same name again brings it back.
+	"""
+	rows = _medicine_rows(name=code)
+	if not rows:
+		frappe.throw(_("Medicine not found"), frappe.DoesNotExistError)
+	stock = flt(rows[0].stock)
+	if stock > 0:
+		frappe.throw(_("{0} still has {1} {2} in stock. Give it out or record it as expired first, then delete it.").format(
+			rows[0].name, frappe.format(stock), rows[0].unit))
+	used = (frappe.db.exists("Stock Ledger Entry", {"item_code": code}) or frappe.db.exists("Stock Entry Detail", {"item_code": code})
+			or frappe.db.exists("Material Request Item", {"item_code": code}) or frappe.db.exists("Batch", {"item": code}))
+	if used:
+		frappe.db.set_value("Item", code, "disabled", 1)
+		return {"code": code, "archived": True}
+	frappe.delete_doc("Item", code, ignore_permissions=True)
+	return {"code": code, "deleted": True}
 
 
 # ------------------------------------------------------------------ stock in / out
