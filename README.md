@@ -106,6 +106,9 @@ node tests/e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> 
 
 # Frappe Health: 17 checks — patient, procedure type, done/planned procedures and the stock they use
 python3 tests/health_smoke.py http://localhost:8088 <staff-email> <staff-pw>
+
+# Care flow through the real UI (medicine → patient → procedure type → procedures → dashboard): 10 checks
+node tests/care_e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
 ```
 
 ## Files

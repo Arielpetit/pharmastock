@@ -25,7 +25,55 @@
           :hint-tone="c.expired ? 'red' : null" :hint="c.expired ? t('{0} with expired stock', c.expired) : ''" />
       </div>
 
-      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <!-- care: only with Frappe Health -->
+      <template v-if="data.care">
+        <p class="eyebrow mb-3 mt-8">{{ t('Care') }}</p>
+        <div class="grid grid-cols-3 gap-3 md:gap-4">
+          <StatCard :label="t('Patients')" :value="num(data.care.patients)" to="/patients" icon="lucide-users-round" tone="blue"
+            :hint="data.care.new_patients ? t('{0} new this month', data.care.new_patients) : ''" />
+          <StatCard :label="t('Procedures this month')" :value="num(data.care.procedures_month)" to="/procedures" icon="lucide-stethoscope" />
+          <StatCard :label="t('Planned')" :value="num(data.care.planned)" to="/procedures" icon="lucide-calendar-clock" tone="amber"
+            :hint="data.care.planned ? t('to do') : ''" />
+        </div>
+        <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <Panel :title="t('Recent procedures')">
+            <template #actions><RouterLink to="/procedures" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
+            <EmptyState v-if="!data.care.recent.length" icon="lucide-stethoscope" :title="t('No procedure yet')" :text="t('Record the care you give, and the medicines used leave the stock.')">
+              <Btn variant="primary" icon="lucide-plus" :label="t('Record a procedure')" @click="openProcedure()" />
+            </EmptyState>
+            <ul v-else class="px-2 pb-2">
+              <li v-for="x in data.care.recent" :key="x.name">
+                <RouterLink :to="{ name: 'patient', params: { name: x.patient } }" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5 transition hover:bg-paper">
+                  <Initials :name="x.patient_name" size="sm" />
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate text-[14px] font-semibold text-ink">{{ x.patient_name }}</div>
+                    <div class="truncate text-[12.5px] text-ink-mute">{{ x.procedure_template }} · {{ shortDate(x.start_date) }}</div>
+                  </div>
+                  <StatusBadge :status="x.state" />
+                </RouterLink>
+              </li>
+            </ul>
+          </Panel>
+          <Panel :title="t('Care this week')" padded>
+            <div class="flex h-24 items-end gap-2">
+              <div v-for="d in data.care.week" :key="d.date" class="flex flex-1 flex-col items-center gap-1.5">
+                <div class="w-full rounded-t-[6px]" :class="d.count ? 'bg-apo-mid' : 'bg-paper-deep'"
+                  :style="{ height: Math.max(4, (d.count / weekMax) * 72) + 'px' }" :title="`${shortDate(d.date)}: ${d.count}`" />
+                <span class="text-[10.5px] text-ink-faint">{{ date(d.date, { weekday: 'narrow' }) }}</span>
+              </div>
+            </div>
+            <ul v-if="data.care.top_templates.length" class="mt-4 space-y-1.5 border-t border-line/70 pt-3.5">
+              <li v-for="x in data.care.top_templates" :key="x.name" class="flex items-baseline justify-between gap-3 text-[13px]">
+                <span class="truncate text-ink-soft">{{ x.name }}</span>
+                <span class="font-semibold text-ink tabular">{{ x.n }}</span>
+              </li>
+            </ul>
+          </Panel>
+        </div>
+      </template>
+
+      <p v-if="data.care" class="eyebrow mb-3 mt-8">{{ t('Pharmacy') }}</p>
+      <div class="grid gap-4 lg:grid-cols-2" :class="data.care ? '' : 'mt-4'">
         <Panel :title="t('Needs attention')">
           <template #actions><RouterLink to="/medicines?status=low" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
           <EmptyState v-if="!attention.length" icon="lucide-circle-check" :title="t('All good')" :text="t('Nothing to restock and nothing expiring.')" />
@@ -67,6 +115,8 @@ import Btn from '@/components/Btn.vue'
 import StatCard from '@/components/StatCard.vue'
 import Panel from '@/components/Panel.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import Initials from '@/components/Initials.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, num, shortDate } from '@/format'
@@ -75,6 +125,7 @@ import { ui, openAddStock, openProcedure, openRequest } from '@/ui'
 
 const data = ref(null)
 const c = computed(() => data.value?.counts || {})
+const weekMax = computed(() => Math.max(1, ...(data.value?.care?.week || []).map((d) => d.count)))
 const firstName = computed(() => (session.user.full_name || '').split(' ')[0])
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -87,6 +138,7 @@ const summary = computed(() => {
   if (c.value.expired) parts.push(t('{0} with expired stock', c.value.expired))
   else if (c.value.expiring) parts.push(t('{0} expiring soon', c.value.expiring))
   if (session.isAdmin && c.value.pending) parts.push(t('{0} request(s) to approve', c.value.pending))
+  if (data.value?.care?.planned) parts.push(t('{0} procedure(s) planned', data.value.care.planned))
   return parts.length ? parts.join(' · ') : t('Everything is in order today.')
 })
 // low or out of stock first, then batches about to expire: at most six lines in all

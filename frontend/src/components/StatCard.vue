@@ -2,7 +2,7 @@
   <component :is="to ? 'RouterLink' : 'div'" :to="to" class="surface group flex flex-col p-4 transition md:p-5 hover:-translate-y-px hover:shadow-lift">
     <div class="flex items-start justify-between gap-3">
       <span class="text-[12.5px] font-medium leading-snug text-ink-mute md:text-[13px]">{{ label }}</span>
-      <span v-if="icon" class="flex size-8 shrink-0 items-center justify-center rounded-full" :class="tones[tone]">
+      <span v-if="icon" class="hidden size-8 shrink-0 items-center justify-center rounded-full md:flex" :class="tones[tone]">
         <span :class="icon" class="size-[15px]" />
       </span>
     </div>

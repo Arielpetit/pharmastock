@@ -617,6 +617,7 @@ def dashboard():
 		activity.append({"date": day, "out": flt(by_day.get(day, {}).get("out_qty")), "in": flt(by_day.get(day, {}).get("in_qty"))})
 	low = [m for m in meds if m.is_low or m.is_out]
 	return {
+		"care": health.care_summary() if health.has_health() else None,
 		"health": {k: len([m for m in meds if m.status == k]) for k in ("ok", "low", "out", "expiring", "expired")},
 		"expiry_buckets": _expiry_buckets(),
 		"top_out": _top_out(days=30),

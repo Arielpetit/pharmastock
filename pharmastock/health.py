@@ -413,3 +413,26 @@ def cancel_procedure(name):
 	cp.flags.ignore_permissions = True
 	cp.cancel()
 	return {"name": cp.name}
+
+
+def care_summary():
+	"""Numbers and latest procedures for the dashboard."""
+	month = nowdate()[:8] + "01"
+	week = frappe.utils.add_days(nowdate(), -6)
+	done = {"docstatus": 1, "status": "Completed"}
+	by_day = dict(frappe.db.sql(
+		"""select start_date, count(*) from `tabClinical Procedure`
+		where docstatus = 1 and status = 'Completed' and start_date >= %s group by start_date""", week))
+	return {
+		"patients": frappe.db.count("Patient", {"status": "Active"}),
+		"new_patients": frappe.db.count("Patient", {"status": "Active", "creation": [">=", month]}),
+		"procedures_month": frappe.db.count("Clinical Procedure", {**done, "start_date": [">=", month]}),
+		"planned": frappe.db.count("Clinical Procedure", {"docstatus": 1, "status": ["in", ["Pending", "In Progress"]]}),
+		"week": [{"date": str(frappe.utils.add_days(week, i)), "count": by_day.get(getdate(frappe.utils.add_days(week, i)), 0)}
+				 for i in range(7)],
+		"recent": _procedure_rows({"docstatus": 1}, limit=5),
+		"top_templates": frappe.db.sql(
+			"""select procedure_template as name, count(*) as n from `tabClinical Procedure`
+			where docstatus = 1 and status = 'Completed' and start_date >= %s group by procedure_template order by n desc limit 4""",
+			month, as_dict=True),
+	}
