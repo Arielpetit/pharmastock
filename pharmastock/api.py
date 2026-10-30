@@ -163,7 +163,10 @@ def boot():
 																					"Tube", "Ampoule", "Strip", "Pack", "Nos"]]}, pluck="name"),
 			"reasons": REASONS,
 			"urgencies": list(URGENCY_DAYS),
+			"genders": health.GENDERS,
+			"blood_groups": health.BLOOD_GROUPS,
 		},
+		"health": health.has_health(),
 	}
 
 
@@ -277,6 +280,7 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 		item.set("reorder_levels", reorder if flt(minimum) else [])
 		item.flags.ignore_permissions = True
 		item.save()
+		health.sync_medication(item.name)
 		out = {"code": item.name}
 		if restored and flt(qty) > 0:
 			out["stock_entry"] = add_stock(item.name, qty, price, date, expiry, lot)["stock_entry"]
@@ -291,6 +295,7 @@ def save_medicine(name, category, unit, form=None, strength=None, location=None,
 	})
 	item.insert(ignore_permissions=True)
 	_keep_owner(item)
+	health.sync_medication(item.name)  # the same medicine in Frappe Health
 	out = {"code": item.name}
 	if flt(qty) > 0:
 		out["stock_entry"] = add_stock(item.name, qty, price, date, expiry, lot)["stock_entry"]
@@ -314,10 +319,13 @@ def delete_medicine(code):
 		frappe.throw(_("{0} still has {1} {2} in stock. Give it out or record it as expired first, then delete it.").format(
 			rows[0].name, frappe.format(stock), rows[0].unit))
 	used = (frappe.db.exists("Stock Ledger Entry", {"item_code": code}) or frappe.db.exists("Stock Entry Detail", {"item_code": code})
-			or frappe.db.exists("Material Request Item", {"item_code": code}) or frappe.db.exists("Batch", {"item": code}))
+			or frappe.db.exists("Material Request Item", {"item_code": code}) or frappe.db.exists("Batch", {"item": code})
+			or (health.has_health() and frappe.db.exists("Clinical Procedure Item", {"item_code": code})))
 	if used:
 		frappe.db.set_value("Item", code, "disabled", 1)
+		health.remove_medication(code)
 		return {"code": code, "archived": True}
+	health.remove_medication(code, delete=True)
 	frappe.delete_doc("Item", code, ignore_permissions=True)
 	return {"code": code, "deleted": True}
 
@@ -743,3 +751,7 @@ def save_staff(email, full_name, role="Pharmacy Staff", password=None, enabled=1
 	user.flags.ignore_password_policy = False
 	user.save()
 	return {"name": user.name}
+
+
+# imported last: health.py uses the helpers above
+from pharmastock import health  # noqa: E402

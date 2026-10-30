@@ -10,6 +10,7 @@ UOMS = ["Tablet", "Capsule", "Bottle", "Vial", "Sachet", "Box", "Tube", "Ampoule
 FORMS = "Tablet\nCapsule\nSyrup\nInjection\nCream / Ointment\nDrops\nInhaler\nPowder / Sachet\nSuppository\nOther"
 REASONS = (
 	"\nDispensed to a patient\nTransfer to another store or department\nDamaged stock\nExpired stock\nOther authorized adjustment"
+	"\nUsed in a procedure"
 )
 
 CUSTOM_FIELDS = {
@@ -39,6 +40,23 @@ CUSTOM_FIELDS = {
 }
 
 
+# only when Frappe Health is installed: these link to its doctypes
+HEALTH_FIELDS = {
+	"Item": [
+		{"fieldname": "custom_medication", "label": "Medication (Health)", "fieldtype": "Link", "options": "Medication",
+		 "read_only": 1, "no_copy": 1, "insert_after": "custom_location"},
+	],
+	"Stock Entry": [
+		{"fieldname": "custom_clinical_procedure", "label": "Clinical Procedure", "fieldtype": "Link", "options": "Clinical Procedure",
+		 "read_only": 1, "no_copy": 1, "search_index": 1, "insert_after": "custom_recipient"},
+	],
+	"Clinical Procedure": [
+		{"fieldname": "custom_client_id", "label": "Client ID", "fieldtype": "Data", "hidden": 1, "read_only": 1,
+		 "no_copy": 1, "search_index": 1, "insert_after": "notes"},
+	],
+}
+
+
 def after_install():
 	"""First install: everything in `after_migrate`, plus the site-wide stock settings and the store."""
 	after_migrate()
@@ -56,6 +74,20 @@ def after_migrate():
 	if erpnext_ready():
 		create_catalogue()
 	create_alerts()
+	setup_health()
+
+
+def setup_health():
+	"""Link the pharmacy to Frappe Health: custom fields, and a Medication for every medicine."""
+	from pharmastock.health import has_health, sync_all_medications
+
+	if not has_health():
+		return
+	create_custom_fields(HEALTH_FIELDS, update=True)
+	if erpnext_ready():
+		_insert_if_missing("Item Group", "Clinical Procedures", item_group_name="Clinical Procedures",
+						   parent_item_group="All Item Groups", is_group=0)
+		sync_all_medications()
 
 
 def erpnext_ready():

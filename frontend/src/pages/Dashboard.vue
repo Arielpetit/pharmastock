@@ -9,6 +9,7 @@
       <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
         <Btn icon="lucide-clipboard-list" :label="t('Request stock')" @click="openRequest()" />
         <Btn class="hidden sm:inline-flex" icon="lucide-hand-heart" :label="t('Give out')" to="/give-out" />
+        <Btn v-if="session.health" class="hidden md:inline-flex" icon="lucide-stethoscope" :label="t('Record a procedure')" @click="openProcedure()" />
         <Btn variant="primary" icon="lucide-plus" :label="t('Add stock')" @click="openAddStock()" />
       </div>
     </div>
@@ -70,7 +71,7 @@ import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, num, shortDate } from '@/format'
 import { session } from '@/session'
-import { ui, openAddStock, openRequest } from '@/ui'
+import { ui, openAddStock, openProcedure, openRequest } from '@/ui'
 
 const data = ref(null)
 const c = computed(() => data.value?.counts || {})

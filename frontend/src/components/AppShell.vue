@@ -12,8 +12,10 @@
       </div>
 
       <nav class="flex-1 overflow-y-auto px-3">
-        <p v-if="!folded" class="eyebrow mb-2 px-3">{{ t('Pharmacy') }}</p>
-        <RouterLink v-for="item in nav" :key="item.to" :to="item.to" custom v-slot="{ navigate, isActive, isExactActive }">
+        <template v-for="section in sections" :key="section.label">
+        <p v-if="!folded" class="eyebrow mb-2 px-3" :class="section.first ? '' : 'mt-5'">{{ t(section.label) }}</p>
+        <div v-else-if="!section.first" class="mx-3 my-3 h-px bg-line" />
+        <RouterLink v-for="item in section.items" :key="item.to" :to="item.to" custom v-slot="{ navigate, isActive, isExactActive }">
           <a :href="'/pharmacy' + item.to" :title="folded ? t(item.label) : undefined"
             class="group relative mb-0.5 flex items-center gap-3 rounded-[12px] py-2.5 text-[14px] transition"
             :class="[folded ? 'justify-center px-0' : 'px-3',
@@ -25,6 +27,7 @@
             <span v-else-if="item.badge" class="absolute right-3 top-2 size-2 rounded-full bg-alert ring-2 ring-card" />
           </a>
         </RouterLink>
+        </template>
       </nav>
 
       <div class="p-3">
@@ -150,6 +153,11 @@
     <AddStockDialog />
     <RequestDialog />
     <SyncDialog />
+    <template v-if="session.health">
+      <PatientDialog />
+      <TemplateDialog />
+      <ProcedureDialog />
+    </template>
   </div>
 </template>
 
@@ -164,6 +172,9 @@ import MedicineDialog from './MedicineDialog.vue'
 import AddStockDialog from './AddStockDialog.vue'
 import RequestDialog from './RequestDialog.vue'
 import SyncDialog from './SyncDialog.vue'
+import PatientDialog from './PatientDialog.vue'
+import TemplateDialog from './TemplateDialog.vue'
+import ProcedureDialog from './ProcedureDialog.vue'
 import { net } from '@/api'
 import { alerts, alertCount, loadAlerts } from '@/alerts'
 import { lang, setLanguage, t } from '@/i18n'
@@ -186,21 +197,29 @@ function toggleFold() {
 }
 
 const pending = computed(() => alerts.data?.pending.length || 0)
-const nav = computed(() => [
-  { to: '/', label: 'Dashboard', icon: 'lucide-layout-grid', exact: true },
-  { to: '/medicines', label: 'Medicines', icon: 'lucide-pill' },
-  { to: '/give-out', label: 'Give out stock', icon: 'lucide-hand-heart' },
-  { to: '/requests', label: 'Stock requests', icon: 'lucide-clipboard-list', badge: pending.value || null },
-  { to: '/reports', label: 'Reports', icon: 'lucide-chart-no-axes-column' },
-  ...(session.isAdmin ? [{ to: '/staff', label: 'Staff', icon: 'lucide-users-round' }] : []),
+const sections = computed(() => [
+  { label: 'Pharmacy', first: true, items: [
+    { to: '/', label: 'Dashboard', icon: 'lucide-layout-grid', exact: true },
+    { to: '/medicines', label: 'Medicines', icon: 'lucide-pill' },
+    { to: '/give-out', label: 'Give out stock', icon: 'lucide-hand-heart' },
+    { to: '/requests', label: 'Stock requests', icon: 'lucide-clipboard-list', badge: pending.value || null },
+    { to: '/reports', label: 'Reports', icon: 'lucide-chart-no-axes-column' },
+  ] },
+  ...(session.health ? [{ label: 'Care', items: [
+    { to: '/patients', label: 'Patients', icon: 'lucide-users-round' },
+    { to: '/procedures', label: 'Procedures', icon: 'lucide-stethoscope' },
+  ] }] : []),
+  ...(session.isAdmin ? [{ label: 'Team', items: [{ to: '/staff', label: 'Staff', icon: 'lucide-id-card' }] }] : []),
 ])
 
+// phone: with Frappe Health, patients and procedures take the last two tabs; requests and reports move to the account menu
 const mobileNav = computed(() => [
   { to: '/', short: 'Home', icon: 'lucide-layout-grid', exact: true },
   { to: '/medicines', short: 'Medicines', icon: 'lucide-pill' },
   { to: '/give-out', short: 'Give out', icon: 'lucide-hand-heart', primary: true },
-  { to: '/requests', short: 'Requests', icon: 'lucide-clipboard-list', badge: pending.value },
-  { to: '/reports', short: 'Reports', icon: 'lucide-chart-no-axes-column' },
+  ...(session.health
+    ? [{ to: '/patients', short: 'Patients', icon: 'lucide-users-round' }, { to: '/procedures', short: 'Care', icon: 'lucide-stethoscope' }]
+    : [{ to: '/requests', short: 'Requests', icon: 'lucide-clipboard-list', badge: pending.value }, { to: '/reports', short: 'Reports', icon: 'lucide-chart-no-axes-column' }]),
 ])
 
 const failed = computed(() => net.outbox.filter((i) => i.status === 'failed').length)
@@ -208,6 +227,10 @@ const failed = computed(() => net.outbox.filter((i) => i.status === 'failed').le
 const userMenu = computed(() => [
   { label: t('My account'), icon: 'lucide-user-round', route: { name: 'account' } },
   { label: t('Notifications'), icon: 'lucide-bell', route: { name: 'notifications' } },
+  ...(session.health ? [
+    { label: pending.value ? `${t('Stock requests')} (${pending.value})` : t('Stock requests'), icon: 'lucide-clipboard-list', route: { name: 'requests' } },
+    { label: t('Reports'), icon: 'lucide-chart-no-axes-column', route: { name: 'reports' } },
+  ] : []),
   ...(session.isAdmin ? [{ label: t('Staff'), icon: 'lucide-users-round', route: { name: 'staff' } }] : []),
   { label: isDark.value ? t('Light theme') : t('Dark theme'), icon: isDark.value ? 'lucide-sun' : 'lucide-moon', onClick: () => setTheme(isDark.value ? 'light' : 'dark') },
   { label: lang.value === 'fr' ? 'English' : 'Français', icon: 'lucide-languages', onClick: () => setLanguage(lang.value === 'fr' ? 'en' : 'fr') },

@@ -26,6 +26,8 @@ const STATUS = {
   ordered: { ...blue, label: 'Ordered' },
   received: { ...green, label: 'Received' },
   cancelled: { ...gray, label: 'Cancelled' },
+  done: { ...green, label: 'Done' },
+  planned: { ...blue, label: 'Planned' },
 }
 const meta = computed(() => STATUS[props.status] || { ...gray, label: props.status || '—' })
 </script>

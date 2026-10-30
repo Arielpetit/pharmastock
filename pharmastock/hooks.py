@@ -5,7 +5,7 @@ app_description = "Simple medicine stock management for health centers"
 app_email = "dev@neurax.local"
 app_license = "mit"
 
-required_apps = ["frappe", "erpnext"]
+required_apps = ["frappe", "erpnext", "healthcare"]
 
 after_install = "pharmastock.setup.install.after_install"
 after_migrate = "pharmastock.setup.install.after_migrate"

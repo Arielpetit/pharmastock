@@ -40,9 +40,23 @@ PWA (Vue 3 + frappe-ui)  →  pharmastock.api (Python, in the site)  →  ERPNex
 - **Setup on install** (`pharmastock/setup/install.py`): roles, custom fields, medicine categories,
   units, bell notifications, batch settings, and the "Pharmacy" store for the default company.
 
+### Patients and procedures (Frappe Health)
+
+`pharmastock/health.py` adds the care side, stored in Frappe Health (`healthcare` app):
+
+- **Medicine ↔ Medication**: every medicine the pharmacy adds is an ERPNext Item *and* a Frappe Health
+  Medication linked to it (same name, category = medication class, strength parsed from "500mg").
+  Editing, archiving or deleting the medicine updates the Medication. Existing medicines are synced
+  on `bench migrate`.
+- **Patients**: registered from the app (`/pharmacy/patients`) as Frappe Health Patients.
+- **Procedure types**: Clinical Procedure Templates with the medicines they use each time.
+- **Procedures**: a Clinical Procedure for a patient. *Done now* takes its medicines out of the
+  Pharmacy store right away (valid batches, earliest expiry first; stock movement reason
+  "Used in a procedure", linked to the procedure); *Planned* waits until it is marked as done.
+
 ## Requirements
 
-Frappe / ERPNext **version 16**. A company must exist (ERPNext setup wizard done) before install,
+Frappe / ERPNext / Frappe Health (`healthcare`) **version 16**. A company must exist (ERPNext setup wizard done) before install,
 otherwise create the store afterwards:
 
 ```bash
@@ -89,6 +103,9 @@ python3 tests/api_smoke.py http://localhost:8088 <staff-email> <staff-pw> <admin
 # Browser (headless Chrome, needs puppeteer-core): 21 checks — full staff and admin journeys,
 # PWA install, offline use and sync, mobile and French; screenshots in docs/screenshots
 node tests/e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
+
+# Frappe Health: 17 checks — patient, procedure type, done/planned procedures and the stock they use
+python3 tests/health_smoke.py http://localhost:8088 <staff-email> <staff-pw>
 ```
 
 ## Files

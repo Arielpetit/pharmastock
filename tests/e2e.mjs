@@ -50,7 +50,7 @@ async function click(page, text, tag = 'button') {
 async function field(page, label, scope = 'body') {
   return page.evaluateHandle((label, scope) => {
     const root = document.querySelector(scope === 'dialog' ? '[role="dialog"]' : 'body')
-    const labels = [...root.querySelectorAll('label, .text-xs, div, span')].filter((l) => l.childElementCount <= 2 && l.textContent.replace('*', '').trim().startsWith(label) && l.textContent.length < label.length + 40)
+    const labels = [...root.querySelectorAll('label, .text-xs, div, span')].filter((l) => !l.closest('aside, nav') && l.childElementCount <= 2 && l.textContent.replace('*', '').trim().startsWith(label) && l.textContent.length < label.length + 40)
     for (const l of labels) {
       let el = l
       for (let i = 0; i < 5 && el; i++, el = el.parentElement) {
@@ -113,7 +113,7 @@ async function login(page, user, pw) {
   await fill(page, 'Email', user)
   await fill(page, 'Password', pw)
   await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle0' }), click(page, 'Log in')])
-  await waitText(page, 'Units in stock')
+  await waitText(page, 'Good')
 }
 const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` })
 
