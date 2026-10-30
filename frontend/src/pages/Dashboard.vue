@@ -19,10 +19,12 @@
     </div>
     <template v-else>
       <div class="grid grid-cols-3 gap-3 md:gap-4">
-        <StatCard :label="t('Medicines')" :value="num(c.medicines)" to="/medicines" />
-        <StatCard :label="t('To restock')" :value="num(c.low)" to="/medicines?status=low" :hint-tone="c.low ? 'red' : null" :hint="c.low ? t('need restocking') : ''" />
-        <StatCard :label="t('Expiring soon')" :value="num(c.expiring + c.expired)" to="/medicines?status=expiring"
-          :hint-tone="c.expired ? 'red' : null" :hint="c.expired ? t('{0} with expired stock', c.expired) : ''" />
+        <StatCard :label="t('Medicines')" :value="num(c.medicines)" icon="lucide-pill" to="/medicines" :hint="t('{0} units in total', num(c.units))" />
+        <StatCard :label="t('To restock')" :value="num(c.low)" icon="lucide-trending-down" to="/medicines?status=low"
+          :tone="c.low ? 'red' : 'green'" :hint-tone="c.low ? 'red' : null" :hint="c.low ? t('need restocking') : t('All stocked')" />
+        <StatCard :label="t('Expiring soon')" :value="num(c.expiring + c.expired)" icon="lucide-calendar-clock" to="/medicines?status=expiring"
+          :tone="c.expired ? 'red' : c.expiring ? 'amber' : 'green'" :hint-tone="c.expired ? 'red' : c.expiring ? 'amber' : null"
+          :hint="c.expired ? t('{0} with expired stock', c.expired) : c.expiring ? t('within 90 days') : t('Nothing to throw away')" />
       </div>
 
       <!-- care: only with Frappe Health -->
@@ -30,10 +32,11 @@
         <p class="eyebrow mb-3 mt-8">{{ t('Care') }}</p>
         <div class="grid grid-cols-3 gap-3 md:gap-4">
           <StatCard :label="t('Patients')" :value="num(data.care.patients)" to="/patients" icon="lucide-users-round" tone="blue"
-            :hint="data.care.new_patients ? t('{0} new this month', data.care.new_patients) : ''" />
-          <StatCard :label="t('Procedures this month')" :value="num(data.care.procedures_month)" to="/procedures" icon="lucide-stethoscope" />
-          <StatCard :label="t('Planned')" :value="num(data.care.planned)" to="/procedures" icon="lucide-calendar-clock" tone="amber"
-            :hint="data.care.planned ? t('to do') : ''" />
+            :hint="data.care.new_patients ? t('{0} new this month', data.care.new_patients) : t('Register the first one')" />
+          <StatCard :label="t('Procedures this month')" :value="num(data.care.procedures_month)" to="/procedures" icon="lucide-stethoscope"
+            :hint="t('medicines taken from stock')" />
+          <StatCard :label="t('Planned')" :value="num(data.care.planned)" to="/procedures" icon="lucide-calendar-check" tone="blue"
+            :hint="data.care.planned ? t('to do') : t('Nothing planned')" />
         </div>
         <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Panel :title="t('Recent procedures')">
