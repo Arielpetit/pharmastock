@@ -46,8 +46,15 @@
           <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="openTemplate()" />
         </EmptyState>
       </div>
-      <div v-else class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
-        <article v-for="tp in templates" :key="tp.name" class="surface flex flex-col p-5" :class="tp.disabled && 'opacity-60'">
+      <template v-else>
+      <div v-if="!activeTemplates.length" class="surface mb-3">
+        <EmptyState icon="lucide-list-plus" :title="t('No active procedure type')"
+          :text="t('All your procedure types are hidden. Create a new one, or show a hidden one again below.')">
+          <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="openTemplate()" />
+        </EmptyState>
+      </div>
+      <div class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+        <article v-for="tp in shownTemplates" :key="tp.name" class="surface flex flex-col p-5" :class="tp.disabled && 'opacity-60'">
           <div class="flex items-start justify-between gap-3">
             <h3 class="font-display text-[20px] leading-tight text-ink">{{ tp.template }}</h3>
             <span v-if="tp.disabled" class="rounded-full bg-paper-deep px-2 py-0.5 text-[11px] text-ink-mute">{{ t('Hidden') }}</span>
@@ -65,10 +72,17 @@
             <div class="flex gap-1.5">
               <Btn size="sm" variant="ghost" icon="lucide-pencil" :label="t('Edit')" @click="openTemplate(tp.name)" />
               <Btn v-if="!tp.disabled" size="sm" icon="lucide-plus" :label="t('Use')" @click="openProcedure(null, tp.name)" />
+              <Btn v-else size="sm" icon="lucide-eye" :label="t('Show again')" @click="reactivate(tp)" />
             </div>
           </div>
         </article>
       </div>
+      <button v-if="hiddenTemplates.length" class="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-medium text-ink-mute transition hover:bg-paper-deep hover:text-ink"
+        @click="showHidden = !showHidden">
+        <span :class="showHidden ? 'lucide-eye-off' : 'lucide-eye'" class="size-4" />
+        {{ showHidden ? t('Hide the hidden ones') : t('Show hidden types ({0})', hiddenTemplates.length) }}
+      </button>
+      </template>
     </template>
   </div>
 </template>
@@ -83,10 +97,10 @@ import EmptyState from '@/components/EmptyState.vue'
 import ProcedureCard from '@/components/ProcedureCard.vue'
 import Pager from '@/components/Pager.vue'
 import { usePaged } from '@/paging'
-import { get } from '@/api'
+import { get, post } from '@/api'
 import { t } from '@/i18n'
 import { num } from '@/format'
-import { ui, H, openProcedure, openTemplate } from '@/ui'
+import { ui, changed, H, openProcedure, openTemplate } from '@/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -103,10 +117,25 @@ const tab = ref(route.query.tab === 'types' ? 'types' : 'records')
 const state = ref('all')
 const rows = ref(null)
 const templates = ref(null)
+const showHidden = ref(false)
+const activeTemplates = computed(() => (templates.value || []).filter((x) => !x.disabled))
+const hiddenTemplates = computed(() => (templates.value || []).filter((x) => x.disabled))
+const shownTemplates = computed(() => (showHidden.value || !activeTemplates.value.length ? templates.value : activeTemplates.value))
 
 const shown = computed(() => (rows.value || []).filter((r) => state.value === 'all' || r.state === state.value))
 const paged = usePaged(shown, 10)
 const count = (s) => (rows.value || []).filter((r) => s === 'all' || r.state === s).length
+
+async function reactivate(tp) {
+  try {
+    await post(H('save_procedure_template'), { name: tp.name, template: tp.template, description: tp.description, disabled: 0,
+      items: tp.items.map((i) => ({ medicine: i.medicine, qty: i.qty })) })
+    toast.success(t('Procedure type shown again'), { description: tp.template })
+    changed()
+  } catch (e) {
+    toast.error(e.message)
+  }
+}
 
 async function load() {
   try {

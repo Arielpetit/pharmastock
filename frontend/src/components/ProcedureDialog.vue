@@ -3,9 +3,12 @@
     :message="t('The medicines used are taken from the pharmacy stock and written in the patient’s file.')"
     icon="lucide-stethoscope" theme="green" size="2xl">
     <div v-if="templates && !templates.length" class="rounded-[16px] border border-dashed border-line p-5 text-center">
-      <p class="font-display text-[19px] text-ink">{{ t('No procedure types yet') }}</p>
-      <p class="mx-auto mt-1 max-w-sm text-[13px] text-ink-mute">{{ t('First create the cares you give, like a wound dressing, with the medicines they use.') }}</p>
-      <Btn class="mt-4" variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="newTemplate" />
+      <p class="font-display text-[19px] text-ink">{{ hiddenCount ? t('No active procedure type') : t('No procedure types yet') }}</p>
+      <p class="mx-auto mt-1 max-w-sm text-[13px] text-ink-mute">{{ hiddenCount ? t('All your procedure types are hidden. Create a new one, or show a hidden one again below.') : t('First create the cares you give, like a wound dressing, with the medicines they use.') }}</p>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+        <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="newTemplate" />
+        <Btn v-if="hiddenCount" icon="lucide-eye" :label="t('Show hidden types ({0})', hiddenCount)" @click="showHiddenTypes" />
+      </div>
     </div>
     <form v-else class="space-y-4" @submit.prevent="save">
       <PatientPicker v-if="ui.procedure.open" v-model="form.patient" :label="t('Patient')" required />
@@ -56,6 +59,7 @@
 <script setup>
 import Sheet from './Sheet.vue'
 import { reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ErrorMessage, FormControl, toast } from 'frappe-ui'
 import Btn from './Btn.vue'
 import MedicineRows from './MedicineRows.vue'
@@ -67,6 +71,8 @@ import { newRow } from '@/care'
 import { ui, changed, H, openPatient, openTemplate } from '@/ui'
 
 const templates = ref(null)
+const hiddenCount = ref(0)
+const router = useRouter()
 const blank = () => ({ patient: ui.procedure.patient, template: null, items: [], date: today(), complete: true, notes: '' })
 const form = reactive(blank())
 const saving = ref(false)
@@ -84,6 +90,7 @@ watch(() => ui.procedure.open, async (open) => {
   templates.value = null
   try {
     templates.value = await get(H('procedure_templates'))
+    hiddenCount.value = templates.value.length ? 0 : (await get(H('procedure_templates'), { include_disabled: 1 })).length
     const preset = templates.value.find((x) => x.name === ui.procedure.template)
     if (preset) chooseTemplate(preset)
   } catch (e) {
@@ -92,6 +99,10 @@ watch(() => ui.procedure.open, async (open) => {
   }
 })
 
+function showHiddenTypes() {
+  ui.procedure.open = false
+  router.push({ name: 'procedures', query: { tab: 'types' } })
+}
 function newTemplate() {
   ui.procedure.open = false
   openTemplate()

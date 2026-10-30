@@ -544,4 +544,10 @@ export default {
   "Nothing planned": "Rien de pr\u00e9vu",
   "{0} units in total": "{0} unités au total",
   "None yet": "Aucun pour l’instant",
+  "No active procedure type": "Aucun type de soin actif",
+  "All your procedure types are hidden. Create a new one, or show a hidden one again below.": "Tous vos types de soins sont masqu\u00e9s. Cr\u00e9ez-en un nouveau, ou r\u00e9affichez un type masqu\u00e9.",
+  "Show again": "R\u00e9afficher",
+  "Hide the hidden ones": "Cacher les types masqu\u00e9s",
+  "Show hidden types ({0})": "Voir les types masqu\u00e9s ({0})",
+  "Procedure type shown again": "Type de soin r\u00e9affich\u00e9",
 }
