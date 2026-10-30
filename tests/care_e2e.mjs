@@ -252,6 +252,25 @@ await waitText(staff, 'Recent procedures')
 await check('6. dashboard shows the care section', (await text(staff)).includes('Recent procedures') && (await text(staff)).includes(PAT))
 await shot(staff, 'care-8-dashboard')
 
+// 6b. cancel a completed procedure from the patient file: reason required, stock comes back
+await click(staff, 'Patients', 'a')
+await (await staff.waitForSelector(`::-p-xpath(//main//*[normalize-space(.)=${JSON.stringify(PAT)}])`, { visible: true })).click()
+await waitText(staff, 'Care received')
+await (await staff.waitForSelector('::-p-xpath(//main//button[normalize-space(.)="Cancel procedure"])', { visible: true })).click()
+await sleep(500)
+await click(staff, 'Cancel procedure', '*[@role="dialog"]//button')
+await sleep(600)
+await check('6b. cancelling a completed procedure asks for a reason', (await text(staff)).includes('Please give the reason') || (await staff.evaluate(() => document.body.innerText)).includes('Please give the reason'))
+await click(staff, 'Recorded for the wrong patient', '*[@role="dialog"]//button')
+await shot(staff, 'care-11-cancel')
+await click(staff, 'Cancel procedure', '*[@role="dialog"]//button')
+await sleep(2000)
+med = await api(staff, 'medicine', { code: MED })
+await check('6b. stock came back (96 + 2 = 98)', med.stock === 98)
+await check('6b. patient file shows it as cancelled with the reason', (await text(staff)).includes('Cancelled') && (await text(staff)).includes('Recorded for the wrong patient'))
+await check('6b. original movement stays, marked cancelled', med.movements.some((m) => m.cancelled && m.recipient === PAT))
+await shot(staff, 'care-12-cancelled')
+
 // 7. phone
 const phone = await newPage(390, 844)
 current = phone

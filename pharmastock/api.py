@@ -515,8 +515,12 @@ def decide_request(name, action, note=None):
 
 
 def _movements(medicine=None, from_date=None, to_date=None, kind=None, limit=200):
-	conditions, values = ["sle.is_cancelled = 0", "sle.warehouse = %(wh)s", "sle.voucher_type = 'Stock Entry'"], {
-		"wh": _warehouse(), "limit": cint(limit)}
+	# a cancelled stock entry keeps its original row (marked cancelled); its reversal row is left out
+	conditions, values = [
+		"sle.warehouse = %(wh)s", "sle.voucher_type = 'Stock Entry'",
+		"""(sle.is_cancelled = 0 or (se.docstatus = 2 and (
+			(se.stock_entry_type = 'Material Issue' and sle.actual_qty < 0) or (se.stock_entry_type <> 'Material Issue' and sle.actual_qty > 0))))""",
+	], {"wh": _warehouse(), "limit": cint(limit)}
 	if medicine:
 		conditions.append("sle.item_code = %(medicine)s")
 		values["medicine"] = medicine
@@ -534,7 +538,7 @@ def _movements(medicine=None, from_date=None, to_date=None, kind=None, limit=200
 		f"""
 		select sle.posting_date as date, sle.creation, sle.item_code as medicine, i.item_name as medicine_name,
 			sle.actual_qty as qty, sle.stock_uom as unit, sle.batch_no as batch, sle.voucher_no as entry, se.owner,
-			se.custom_reason as reason, se.custom_recipient as recipient, se.stock_entry_type as type,
+			se.custom_reason as reason, se.custom_recipient as recipient, se.stock_entry_type as type, se.docstatus as se_status,
 			sle.qty_after_transaction as balance
 		from `tabStock Ledger Entry` sle
 		join `tabStock Entry` se on se.name = sle.voucher_no
@@ -552,11 +556,14 @@ def _movements(medicine=None, from_date=None, to_date=None, kind=None, limit=200
 		for b in frappe.db.sql(
 			"""select sbb.voucher_no, sbb.item_code, group_concat(distinct sbe.batch_no) as batches
 			from `tabSerial and Batch Bundle` sbb join `tabSerial and Batch Entry` sbe on sbe.parent = sbb.name
-			where sbb.voucher_no in %(e)s and sbb.is_cancelled = 0 group by sbb.voucher_no, sbb.item_code""",
+			where sbb.voucher_no in %(e)s group by sbb.voucher_no, sbb.item_code""",
 			{"e": entries}, as_dict=True):
 			bundle_batches[(b.voucher_no, b.item_code)] = b.batches
 	names = _user_names(r.owner for r in rows)
 	for r in rows:
+		r.cancelled = r.se_status == 2
+		if r.cancelled:
+			r.balance = None
 		r.direction = "in" if flt(r.qty) > 0 else "out"
 		r.qty = abs(flt(r.qty))
 		r.batch = r.batch or bundle_batches.get((r.entry, r.medicine))

@@ -93,10 +93,10 @@
           <ul v-else class="px-2 pb-2">
             <li v-for="(m, i) in data.recent.slice(0, 5)" :key="i" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5">
               <div class="min-w-0 flex-1">
-                <div class="truncate text-[14px] font-semibold text-ink">{{ m.medicine_name }}</div>
+                <div class="flex items-center gap-2"><span class="truncate text-[14px] font-semibold text-ink">{{ m.medicine_name }}</span><CancelledTag v-if="m.cancelled" /></div>
                 <div class="truncate text-[12.5px] text-ink-mute">{{ t(m.reason) }} · {{ shortDate(m.date) }}</div>
               </div>
-              <div class="font-display text-[19px] leading-none text-ink tabular">{{ m.direction === 'in' ? '+' : '−' }}{{ num(m.qty) }}</div>
+              <div class="font-display text-[19px] leading-none text-ink tabular" :class="m.cancelled && 'line-through opacity-50'">{{ m.direction === 'in' ? '+' : '−' }}{{ num(m.qty) }}</div>
             </li>
           </ul>
         </Panel>
@@ -112,6 +112,7 @@ import Btn from '@/components/Btn.vue'
 import StatCard from '@/components/StatCard.vue'
 import Panel from '@/components/Panel.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import CancelledTag from '@/components/CancelledTag.vue'
 import Initials from '@/components/Initials.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { get } from '@/api'

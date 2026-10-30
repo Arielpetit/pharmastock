@@ -64,11 +64,11 @@
         <ul v-else class="px-2 pb-2">
           <li v-for="(x, i) in recent" :key="i" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5">
             <div class="min-w-0 flex-1">
-              <div class="truncate text-[14px] font-semibold text-ink">{{ x.medicine_name }}</div>
+              <div class="flex items-center gap-2"><span class="truncate text-[14px] font-semibold text-ink">{{ x.medicine_name }}</span><CancelledTag v-if="x.cancelled" /></div>
               <div class="truncate text-[12.5px] text-ink-mute">{{ t(x.reason || '') }}<template v-if="x.recipient"> · {{ x.recipient }}</template></div>
             </div>
             <div class="text-right">
-              <div class="font-display text-[19px] leading-none text-ink tabular">−{{ num(x.qty) }}</div>
+              <div class="font-display text-[19px] leading-none text-ink tabular" :class="x.cancelled && 'line-through opacity-50'">−{{ num(x.qty) }}</div>
               <div class="mt-1 text-[11.5px] text-ink-mute">{{ shortDate(x.date) }}</div>
             </div>
           </li>
@@ -83,6 +83,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { FormControl, toast } from 'frappe-ui'
 import Btn from '@/components/Btn.vue'
+import CancelledTag from '@/components/CancelledTag.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Panel from '@/components/Panel.vue'
 import EmptyState from '@/components/EmptyState.vue'

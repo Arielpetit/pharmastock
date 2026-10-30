@@ -299,9 +299,10 @@ def save_procedure_template(template, items, description=None, name=None, disabl
 def _procedure_rows(filters, limit=100):
 	rows = frappe.get_all("Clinical Procedure", filters=filters,
 						  fields=["name", "patient", "patient_name", "procedure_template", "start_date", "status", "notes",
-								  "owner", "creation", "consume_stock", "actual_end_datetime"],
+								  "owner", "creation", "consume_stock", "actual_end_datetime", "docstatus", "custom_cancel_reason",
+								  "custom_cancelled_by"],
 						  order_by="start_date desc, creation desc", limit=cint(limit))
-	names = _user_names(r.owner for r in rows)
+	names = _user_names([r.owner for r in rows] + [r.custom_cancelled_by for r in rows])
 	entries = {}
 	if rows and frappe.get_meta("Stock Entry").has_field("custom_clinical_procedure"):
 		entries = dict(frappe.get_all("Stock Entry", filters={"custom_clinical_procedure": ["in", [r.name for r in rows]],
@@ -309,23 +310,27 @@ def _procedure_rows(filters, limit=100):
 	for r in rows:
 		r.items = _item_rows(r.name, "Clinical Procedure")
 		r.by = names.get(r.owner, r.owner)
+		r.cancelled_by = names.get(r.custom_cancelled_by, r.custom_cancelled_by)
 		r.stock_entry = entries.get(r.name)
-		r.state = "done" if r.status == "Completed" else "cancelled" if r.status == "Cancelled" else "planned"
+		r.state = "cancelled" if r.docstatus == 2 else "done" if r.status == "Completed" else "planned"
 	return rows
 
 
 @frappe.whitelist()
 def procedures(patient=None, status=None, limit=100):
-	"""Recorded procedures, newest first. status: planned | done."""
+	"""Recorded procedures, newest first (cancelled ones included). status: planned | done | cancelled."""
 	_require_staff()
 	_require_health()
-	filters = {"docstatus": 1}
+	filters = {"docstatus": ["in", [1, 2]]}
 	if patient:
 		filters["patient"] = patient
 	if status == "done":
+		filters["docstatus"] = 1
 		filters["status"] = "Completed"
 	elif status == "planned":
 		filters["status"] = ["in", ["Pending", "In Progress"]]
+	elif status == "cancelled":
+		filters["docstatus"] = 2
 	return _procedure_rows(filters, limit)
 
 
@@ -404,15 +409,30 @@ def complete_procedure(name):
 
 @frappe.whitelist(methods=["POST"])
 @_writes(admin=False)
-def cancel_procedure(name):
-	"""Cancel a planned procedure. A completed one keeps its record; its stock movement stays in the ledger."""
+def cancel_procedure(name, reason=None):
+	"""Cancel a procedure (pharmacy staff and administrators).
+
+	A planned one is simply cancelled. A completed one needs a reason: its stock movement is cancelled
+	too, so the medicines go back into the same batches. The original movement stays in the history,
+	marked as cancelled, and the procedure stays in the patient's file as cancelled.
+	"""
 	_require_health()
 	cp = frappe.get_doc("Clinical Procedure", name)
-	if cp.status == "Completed":
-		frappe.throw(_("A completed procedure cannot be cancelled here. Ask your administrator."))
+	if cp.docstatus == 2:
+		frappe.throw(_("This procedure is already cancelled"))
+	reason = (reason or "").strip()
+	completed = cp.status == "Completed"
+	if completed and not reason:
+		frappe.throw(_("Please give the reason for cancelling this procedure"))
+	if completed:
+		for se in frappe.get_all("Stock Entry", filters={"custom_clinical_procedure": cp.name, "docstatus": 1}, pluck="name"):
+			entry = frappe.get_doc("Stock Entry", se)
+			entry.flags.ignore_permissions = True
+			entry.cancel()
 	cp.flags.ignore_permissions = True
 	cp.cancel()
-	return {"name": cp.name}
+	cp.db_set({"custom_cancel_reason": reason, "custom_cancelled_by": _owner()}, update_modified=False)
+	return {"name": cp.name, "stock_returned": completed}
 
 
 def care_summary():

@@ -112,6 +112,7 @@ const states = [
   { value: 'all', label: 'All' },
   { value: 'planned', label: 'Planned' },
   { value: 'done', label: 'Done' },
+  { value: 'cancelled', label: 'Cancelled' },
 ]
 const tab = ref(route.query.tab === 'types' ? 'types' : 'records')
 const state = ref('all')

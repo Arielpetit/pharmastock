@@ -104,10 +104,10 @@ python3 tests/api_smoke.py http://localhost:8088 <staff-email> <staff-pw> <admin
 # PWA install, offline use and sync, mobile and French; screenshots in docs/screenshots
 node tests/e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
 
-# Frappe Health: 17 checks — patient, procedure type, done/planned procedures and the stock they use
+# Frappe Health: 26 checks — patient, procedure type, done/planned procedures, the stock they use, cancelling
 python3 tests/health_smoke.py http://localhost:8088 <staff-email> <staff-pw>
 
-# Care flow through the real UI (medicine → patient → procedure type → procedures → dashboard): 10 checks
+# Care flow through the real UI (medicine → patient → procedure type → procedures → cancel → dashboard): 14 checks
 node tests/care_e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
 ```
 

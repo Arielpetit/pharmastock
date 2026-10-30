@@ -11,6 +11,7 @@ export const ui = reactive({
   patient: { open: false, name: null },
   template: { open: false, name: null },
   procedure: { open: false, patient: null, template: null },
+  cancelProc: { open: false, procedure: null },
 })
 
 export const changed = () => ui.version++
@@ -20,5 +21,6 @@ export const openRequest = (medicine = null, qty = null) => Object.assign(ui.req
 export const openPatient = (name = null) => Object.assign(ui.patient, { open: true, name })
 export const openTemplate = (name = null) => Object.assign(ui.template, { open: true, name })
 export const openProcedure = (patient = null, template = null) => Object.assign(ui.procedure, { open: true, patient, template })
+export const openCancelProcedure = (procedure) => Object.assign(ui.cancelProc, { open: true, procedure })
 // Frappe Health methods
 export const H = (m) => `pharmastock.health.${m}`

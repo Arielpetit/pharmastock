@@ -18,7 +18,7 @@
         <section class="order-2 lg:order-1">
           <div class="mb-3 flex items-baseline justify-between">
             <h2 class="font-display text-[22px] text-ink">{{ t('Care received') }}</h2>
-            <span class="text-[12.5px] text-ink-mute">{{ t('{0} procedure(s)', p.procedures.length) }}</span>
+            <span class="text-[12.5px] text-ink-mute">{{ t('{0} procedure(s)', p.procedures.filter((x) => x.state !== 'cancelled').length) }}</span>
           </div>
           <div v-if="!p.procedures.length" class="surface">
             <EmptyState icon="lucide-stethoscope" :title="t('No procedure yet')" :text="t('Procedures you record for this patient appear here.')">

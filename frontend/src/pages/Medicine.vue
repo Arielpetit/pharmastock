@@ -93,14 +93,14 @@
               </div>
               <div class="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <div class="text-[14px] font-semibold text-ink">{{ t(x.reason) }}<span v-if="x.recipient" class="font-normal text-ink-mute"> · {{ x.recipient }}</span></div>
+                  <div class="text-[14px] font-semibold text-ink">{{ t(x.reason) }}<span v-if="x.recipient" class="font-normal text-ink-mute"> · {{ x.recipient }}</span> <CancelledTag v-if="x.cancelled" class="ml-1 align-middle" /></div>
                   <div class="mt-0.5 truncate text-[12.5px] text-ink-mute">{{ date(x.date) }} · {{ x.by }}<template v-if="x.batch"> · <span class="font-label text-[11.5px]">{{ x.batch }}</span></template></div>
                 </div>
                 <div class="text-right">
-                  <div class="font-display text-[19px] leading-none tabular" :class="x.direction === 'in' ? 'text-apo' : 'text-ink'">
+                  <div class="font-display text-[19px] leading-none tabular" :class="[x.direction === 'in' ? 'text-apo' : 'text-ink', x.cancelled && 'line-through opacity-50']">
                     {{ x.direction === 'in' ? '+' : '−' }}{{ num(x.qty) }}
                   </div>
-                  <div class="mt-1 text-[11.5px] text-ink-mute tabular">{{ t('left') }} {{ num(x.balance) }}</div>
+                  <div v-if="!x.cancelled" class="mt-1 text-[11.5px] text-ink-mute tabular">{{ t('left') }} {{ num(x.balance) }}</div>
                 </div>
               </div>
             </li>
@@ -120,6 +120,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import Panel from '@/components/Panel.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import CancelledTag from '@/components/CancelledTag.vue'
 import ExpiryChip from '@/components/ExpiryChip.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
 import { get, post } from '@/api'

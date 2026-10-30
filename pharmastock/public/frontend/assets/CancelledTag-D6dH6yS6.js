@@ -1,0 +1,1 @@
+import{o as e,c as t,t as n,u as a,f as s}from"./index-QSQSNQnk.js";const c={class:"inline-flex items-center rounded-full bg-paper-deep px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-ink-mute"},i={__name:"CancelledTag",setup(p){return(r,o)=>(e(),t("span",c,n(a(s)("Cancelled")),1))}};export{i as _};

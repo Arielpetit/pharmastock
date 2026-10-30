@@ -157,6 +157,7 @@
       <PatientDialog />
       <TemplateDialog />
       <ProcedureDialog />
+      <CancelProcedureDialog />
     </template>
   </div>
 </template>
@@ -175,6 +176,7 @@ import SyncDialog from './SyncDialog.vue'
 import PatientDialog from './PatientDialog.vue'
 import TemplateDialog from './TemplateDialog.vue'
 import ProcedureDialog from './ProcedureDialog.vue'
+import CancelProcedureDialog from './CancelProcedureDialog.vue'
 import { net } from '@/api'
 import { alerts, alertCount, loadAlerts } from '@/alerts'
 import { lang, setLanguage, t } from '@/i18n'

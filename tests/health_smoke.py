@@ -115,4 +115,25 @@ moves = staff.get("movements", {"medicine": med})
 check("movement says 'Used in a procedure' with the patient", any(
 	m["reason"] == "Used in a procedure" and m["recipient"] == p["patient_name"] for m in moves))
 
+# cancelling a completed procedure puts the medicines back and keeps the history
+fails("a completed procedure needs a reason to be cancelled", lambda: staff.post("health.cancel_procedure", {"name": done["name"]}), "reason")
+check("still 32 after the refused cancel", stock() == 32)
+cancelled = staff.post("health.cancel_procedure", {"name": done["name"], "reason": "Recorded for the wrong patient"})
+check("cancelled: stock returned", cancelled["stock_returned"] and stock() == 35)
+fails("cannot cancel twice", lambda: staff.post("health.cancel_procedure", {"name": done["name"], "reason": "again"}), "already cancelled")
+detail = staff.get("health.patient", {"name": p["name"]})
+mine = [x for x in detail["procedures"] if x["name"] == done["name"]][0]
+check("procedure shows as cancelled with its reason", mine["state"] == "cancelled" and mine["custom_cancel_reason"] == "Recorded for the wrong patient")
+moves = staff.get("movements", {"medicine": med})
+old = [m for m in moves if m["entry"] == cancelled_entry] if (cancelled_entry := done["stock_entry"]) else []
+check("original movement stays in the history, marked cancelled", len(old) == 1 and old[0]["cancelled"] and old[0]["direction"] == "out")
+check("no reversal row is listed", len([m for m in moves if m["entry"] == done["stock_entry"]]) == 1)
+check("done filter leaves it out, cancelled filter has it",
+	done["name"] not in [x["name"] for x in staff.get("health.procedures", {"status": "done"})] and
+	done["name"] in [x["name"] for x in staff.get("health.procedures", {"status": "cancelled"})])
+# a planned procedure can be cancelled without a reason, nothing moves
+planned2 = staff.post("health.record_procedure", {"patient": p["name"], "template": tpl["name"], "complete": 0})
+staff.post("health.cancel_procedure", {"name": planned2["name"]})
+check("planned procedure cancelled without a reason, stock unchanged", stock() == 35)
+
 print(f"\n{ok} checks passed")

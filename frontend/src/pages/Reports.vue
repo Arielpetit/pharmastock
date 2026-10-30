@@ -48,12 +48,12 @@
             <span :class="r.direction === 'in' ? 'lucide-arrow-down-to-line' : 'lucide-arrow-up-from-line'" class="size-4" />
           </span>
           <div class="min-w-0 flex-1">
-            <div class="truncate text-[14px] font-semibold text-ink">{{ r.medicine_name }}</div>
+            <div class="flex items-center gap-2"><span class="truncate text-[14px] font-semibold text-ink">{{ r.medicine_name }}</span><CancelledTag v-if="r.cancelled" /></div>
             <div class="mt-0.5 truncate text-[12px] text-ink-mute">{{ date(r.date) }} · {{ t(r.reason || '') }}<template v-if="r.recipient"> · {{ r.recipient }}</template></div>
           </div>
           <div class="shrink-0 text-right">
-            <div class="font-display text-[19px] leading-none tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">{{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</div>
-            <div class="mt-1 text-[11px] text-ink-faint tabular">{{ t('Balance') }} {{ num(r.balance) }}</div>
+            <div class="font-display text-[19px] leading-none tabular" :class="[r.direction === 'in' ? 'text-apo' : 'text-ink', r.cancelled && 'line-through opacity-50']">{{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</div>
+            <div v-if="!r.cancelled" class="mt-1 text-[11px] text-ink-faint tabular">{{ t('Balance') }} {{ num(r.balance) }}</div>
           </div>
         </li>
       </ul>
@@ -66,13 +66,13 @@
         <tbody>
           <tr v-for="(r, i) in paged.items.value" :key="i" class="border-b border-line/70 last:border-0">
             <td class="whitespace-nowrap py-3 pl-6 pr-3 text-ink-mute">{{ date(r.date) }}</td>
-            <td class="px-3 py-3 font-semibold text-ink">{{ r.medicine_name }}</td>
-            <td class="px-3 py-3 text-right font-display text-[17px] tabular" :class="r.direction === 'in' ? 'text-apo' : 'text-ink'">
+            <td class="px-3 py-3 font-semibold text-ink">{{ r.medicine_name }} <CancelledTag v-if="r.cancelled" class="ml-1.5 align-middle" /></td>
+            <td class="px-3 py-3 text-right font-display text-[17px] tabular" :class="[r.direction === 'in' ? 'text-apo' : 'text-ink', r.cancelled && 'line-through opacity-50']">
               {{ r.direction === 'in' ? '+' : '−' }}{{ num(r.qty) }}</td>
             <td class="px-3 py-3 text-ink-soft">{{ t(r.reason || '') }}<span v-if="r.recipient" class="text-ink-mute"> · {{ r.recipient }}</span></td>
             <td class="font-label hidden px-3 py-3 text-[11.5px] text-ink-mute xl:table-cell">{{ r.batch || '—' }}</td>
             <td class="hidden px-3 py-3 text-ink-soft xl:table-cell">{{ r.by }}</td>
-            <td class="py-3 pl-3 pr-6 text-right text-ink-mute tabular">{{ num(r.balance) }}</td>
+            <td class="py-3 pl-3 pr-6 text-right text-ink-mute tabular">{{ r.cancelled ? '—' : num(r.balance) }}</td>
           </tr>
         </tbody>
       </table>
@@ -160,6 +160,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import BlisterGauge from '@/components/BlisterGauge.vue'
 import MedicinePicker from '@/components/MedicinePicker.vue'
 import Pager from '@/components/Pager.vue'
+import CancelledTag from '@/components/CancelledTag.vue'
 import { usePaged } from '@/paging'
 import { get } from '@/api'
 import { t } from '@/i18n'
@@ -208,8 +209,8 @@ async function load() {
 function exportCsv() {
   if (tab.value === 'movements')
     downloadCsv(`movements_${from.value}_${to.value}.csv`,
-      [t('Date'), t('Medicine'), t('Direction'), t('Quantity'), t('Reason'), t('Recipient'), t('Lot'), t('By'), t('Balance')],
-      movements.value.map((r) => [r.date, r.medicine_name, r.direction === 'in' ? t('In') : t('Out'), r.qty, t(r.reason || ''), r.recipient, r.batch, r.by, r.balance]))
+      [t('Date'), t('Medicine'), t('Direction'), t('Quantity'), t('Reason'), t('Recipient'), t('Lot'), t('By'), t('Balance'), t('Status')],
+      movements.value.map((r) => [r.date, r.medicine_name, r.direction === 'in' ? t('In') : t('Out'), r.qty, t(r.reason || ''), r.recipient, r.batch, r.by, r.balance, r.cancelled ? t('Cancelled') : '']))
   else if (tab.value === 'expiry')
     downloadCsv(`expiry_${today()}.csv`, [t('Medicine'), t('Lot'), t('Expiry date'), t('Days left'), t('Quantity'), t('Unit'), t('Location')],
       expiry.value.map((r) => [r.medicine_name, r.batch, r.expiry_date, r.days_left, r.qty, r.unit, r.location]))

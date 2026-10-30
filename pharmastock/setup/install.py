@@ -53,6 +53,10 @@ HEALTH_FIELDS = {
 	"Clinical Procedure": [
 		{"fieldname": "custom_client_id", "label": "Client ID", "fieldtype": "Data", "hidden": 1, "read_only": 1,
 		 "no_copy": 1, "search_index": 1, "insert_after": "notes"},
+		{"fieldname": "custom_cancel_reason", "label": "Cancel Reason", "fieldtype": "Small Text", "read_only": 1,
+		 "no_copy": 1, "allow_on_submit": 1, "insert_after": "custom_client_id"},
+		{"fieldname": "custom_cancelled_by", "label": "Cancelled By", "fieldtype": "Link", "options": "User", "read_only": 1,
+		 "no_copy": 1, "allow_on_submit": 1, "insert_after": "custom_cancel_reason"},
 	],
 }
 
