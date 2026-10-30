@@ -18,27 +18,21 @@
       <div v-for="i in 3" :key="i" class="surface h-[130px] animate-pulse" />
     </div>
     <template v-else>
-      <div class="grid grid-cols-3 gap-3 md:gap-4">
+      <div class="grid gap-3 md:gap-4" :class="data.care ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-3'">
         <StatCard :label="t('Medicines')" :value="num(c.medicines)" icon="lucide-pill" to="/medicines" :hint="t('{0} units in total', num(c.units))" />
         <StatCard :label="t('To restock')" :value="num(c.low)" icon="lucide-trending-down" to="/medicines?status=low"
           :tone="c.low ? 'red' : 'green'" :hint-tone="c.low ? 'red' : null" :hint="c.low ? t('need restocking') : t('All stocked')" />
         <StatCard :label="t('Expiring soon')" :value="num(c.expiring + c.expired)" icon="lucide-calendar-clock" to="/medicines?status=expiring"
           :tone="c.expired ? 'red' : c.expiring ? 'amber' : 'green'" :hint-tone="c.expired ? 'red' : c.expiring ? 'amber' : null"
           :hint="c.expired ? t('{0} with expired stock', c.expired) : c.expiring ? t('within 90 days') : t('Nothing to throw away')" />
+        <StatCard v-if="data.care" :label="t('Patients')" :value="num(data.care.patients)" to="/patients" icon="lucide-users-round" tone="blue"
+          :hint="data.care.new_patients ? t('{0} new this month', data.care.new_patients) : t('None yet')" />
       </div>
 
       <!-- care: only with Frappe Health -->
       <template v-if="data.care">
         <p class="eyebrow mb-3 mt-8">{{ t('Care') }}</p>
-        <div class="grid grid-cols-3 gap-3 md:gap-4">
-          <StatCard :label="t('Patients')" :value="num(data.care.patients)" to="/patients" icon="lucide-users-round" tone="blue"
-            :hint="data.care.new_patients ? t('{0} new this month', data.care.new_patients) : t('Register the first one')" />
-          <StatCard :label="t('Procedures this month')" :value="num(data.care.procedures_month)" to="/procedures" icon="lucide-stethoscope"
-            :hint="t('medicines taken from stock')" />
-          <StatCard :label="t('Planned')" :value="num(data.care.planned)" to="/procedures" icon="lucide-calendar-check" tone="blue"
-            :hint="data.care.planned ? t('to do') : t('Nothing planned')" />
-        </div>
-        <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Panel :title="t('Recent procedures')">
             <template #actions><RouterLink to="/procedures" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
             <EmptyState v-if="!data.care.recent.length" icon="lucide-stethoscope" :title="t('No procedure yet')" :text="t('Record the care you give, and the medicines used leave the stock.')">

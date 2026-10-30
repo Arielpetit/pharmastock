@@ -543,4 +543,5 @@ export default {
   "medicines taken from stock": "m\u00e9dicaments sortis du stock",
   "Nothing planned": "Rien de pr\u00e9vu",
   "{0} units in total": "{0} unités au total",
+  "None yet": "Aucun pour l’instant",
 }
