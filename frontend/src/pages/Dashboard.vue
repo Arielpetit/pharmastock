@@ -32,7 +32,7 @@
       <!-- care: only with Frappe Health -->
       <template v-if="data.care">
         <p class="eyebrow mb-3 mt-8">{{ t('Care') }}</p>
-        <div class="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div>
           <Panel :title="t('Recent procedures')">
             <template #actions><RouterLink to="/procedures" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
             <EmptyState v-if="!data.care.recent.length" icon="lucide-stethoscope" :title="t('No procedure yet')" :text="t('Record the care you give, and the medicines used leave the stock.')">
@@ -51,21 +51,7 @@
               </li>
             </ul>
           </Panel>
-          <Panel :title="t('Care this week')" padded>
-            <div class="flex h-24 items-end gap-2">
-              <div v-for="d in data.care.week" :key="d.date" class="flex flex-1 flex-col items-center gap-1.5">
-                <div class="w-full rounded-t-[6px]" :class="d.count ? 'bg-apo-mid' : 'bg-paper-deep'"
-                  :style="{ height: Math.max(4, (d.count / weekMax) * 72) + 'px' }" :title="`${shortDate(d.date)}: ${d.count}`" />
-                <span class="text-[10.5px] text-ink-faint">{{ date(d.date, { weekday: 'narrow' }) }}</span>
-              </div>
-            </div>
-            <ul v-if="data.care.top_templates.length" class="mt-4 space-y-1.5 border-t border-line/70 pt-3.5">
-              <li v-for="x in data.care.top_templates" :key="x.name" class="flex items-baseline justify-between gap-3 text-[13px]">
-                <span class="truncate text-ink-soft">{{ x.name }}</span>
-                <span class="font-semibold text-ink tabular">{{ x.n }}</span>
-              </li>
-            </ul>
-          </Panel>
+
         </div>
       </template>
 
@@ -123,7 +109,6 @@ import { ui, openAddStock, openProcedure, openRequest } from '@/ui'
 
 const data = ref(null)
 const c = computed(() => data.value?.counts || {})
-const weekMax = computed(() => Math.max(1, ...(data.value?.care?.week || []).map((d) => d.count)))
 const firstName = computed(() => (session.user.full_name || '').split(' ')[0])
 const greeting = computed(() => {
   const h = new Date().getHours()
