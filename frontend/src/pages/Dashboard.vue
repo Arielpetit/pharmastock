@@ -58,7 +58,6 @@
         </div>
         <div class="mt-4">
           <Panel :title="t('Recent treatments')">
-            <template #actions><RouterLink to="/procedures" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
             <EmptyState v-if="!data.care.recent.length" icon="lucide-stethoscope" :title="t('No treatment yet')" :text="t('Record the care you give, and the medicines used leave the stock.')">
               <Btn variant="primary" icon="lucide-plus" :label="t('Record a treatment')" @click="openProcedure()" />
             </EmptyState>

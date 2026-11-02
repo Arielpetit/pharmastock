@@ -209,7 +209,7 @@ const sections = computed(() => [
   ] },
   ...(session.health ? [{ label: 'Care', items: [
     { to: '/patients', label: 'Patients', icon: 'lucide-users-round' },
-    { to: '/procedures', label: 'Treatments', icon: 'lucide-stethoscope' },
+    { to: '/procedures', label: 'Treatment types', icon: 'lucide-list-checks' },
   ] }] : []),
   ...(session.isAdmin ? [{ label: 'Team', items: [{ to: '/staff', label: 'Staff', icon: 'lucide-id-card' }] }] : []),
 ])
@@ -220,7 +220,7 @@ const mobileNav = computed(() => [
   { to: '/medicines', short: 'Medicines', icon: 'lucide-pill' },
   { to: '/give-out', short: 'Give out', icon: 'lucide-hand-heart', primary: true },
   ...(session.health
-    ? [{ to: '/patients', short: 'Patients', icon: 'lucide-users-round' }, { to: '/procedures', short: 'Treatments', icon: 'lucide-stethoscope' }]
+    ? [{ to: '/patients', short: 'Patients', icon: 'lucide-users-round' }, { to: '/procedures', short: 'Types', icon: 'lucide-list-checks' }]
     : [{ to: '/requests', short: 'Requests', icon: 'lucide-clipboard-list', badge: pending.value }, { to: '/reports', short: 'Reports', icon: 'lucide-chart-no-axes-column' }]),
 ])
 

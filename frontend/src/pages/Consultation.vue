@@ -119,7 +119,7 @@
         <div class="surface p-5 md:p-6">
           <div class="mb-3 flex items-baseline justify-between"><h2 class="text-[15px] font-semibold text-ink">{{ t('Treatments to do') }}</h2>
             <span class="text-[12px] text-ink-mute">{{ t('Care the nurse gives, like a dressing or an injection') }}</span></div>
-          <p v-if="!templates.length" class="text-[13px] text-ink-mute">{{ t('No treatment type yet.') }} <RouterLink to="/procedures?tab=types" class="font-medium text-apo hover:underline">{{ t('Create one') }}</RouterLink></p>
+          <p v-if="!templates.length" class="text-[13px] text-ink-mute">{{ t('No treatment type yet.') }} <RouterLink to="/procedures" class="font-medium text-apo hover:underline">{{ t('Create one') }}</RouterLink></p>
           <div v-else class="flex flex-wrap gap-1.5">
             <button v-for="x in templates" :key="x.name" type="button" class="rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition"
               :class="form.treatments.includes(x.name) ? 'border-ink bg-ink text-on-ink' : 'border-line bg-card text-ink-soft hover:border-line-strong hover:text-ink'"

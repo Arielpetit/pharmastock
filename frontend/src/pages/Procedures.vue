@@ -1,44 +1,11 @@
 <template>
   <div>
-    <PageHeader :eyebrow="t('Care')" :title="t('Treatments')" :subtitle="t('Care given to patients, and the medicines each one uses.')">
+    <PageHeader :eyebrow="t('Care')" :title="t('Treatment types')" :subtitle="t('The cares you give, and the medicines each one uses. Record a treatment from the patient’s file.')">
       <template #actions>
-        <Btn icon="lucide-list-plus" :label="t('New treatment type')" @click="openTemplate()" />
-        <Btn variant="primary" icon="lucide-stethoscope" :label="t('Record a treatment')" @click="openProcedure()" />
+        <Btn variant="primary" icon="lucide-plus" :label="t('New treatment type')" @click="openTemplate()" />
       </template>
     </PageHeader>
 
-    <div class="mb-4 inline-flex rounded-full border border-line bg-card p-1 shadow-card">
-      <button v-for="x in tabs" :key="x.value" class="flex items-center gap-2 rounded-full px-4 py-1.5 text-[13px] font-medium transition"
-        :class="tab === x.value ? 'bg-ink text-on-ink' : 'text-ink-soft hover:text-ink'" @click="tab = x.value">
-        <span :class="x.icon" class="size-4" /> {{ t(x.label) }}
-      </button>
-    </div>
-
-    <!-- recorded procedures -->
-    <template v-if="tab === 'records'">
-      <div class="scrollbar-none -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <button v-for="s in states" :key="s.value" class="flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition"
-          :class="state === s.value ? 'border-ink bg-ink text-on-ink' : 'border-line bg-card text-ink-soft hover:border-line-strong hover:text-ink'"
-          @click="state = s.value">
-          {{ t(s.label) }} <span class="tabular" :class="state === s.value ? 'text-on-ink/60' : 'text-ink-faint'">{{ count(s.value) }}</span>
-        </button>
-      </div>
-      <div v-if="!rows" class="space-y-2.5"><div v-for="i in 4" :key="i" class="surface h-28 animate-pulse" /></div>
-      <div v-else-if="!shown.length" class="surface">
-        <EmptyState icon="lucide-stethoscope" :title="t('No treatments here')" :text="t('Record the care you give, and the medicines used leave the stock.')">
-          <Btn variant="primary" icon="lucide-plus" :label="t('Record a treatment')" @click="openProcedure()" />
-        </EmptyState>
-      </div>
-      <template v-else>
-        <div class="grid gap-2.5 xl:grid-cols-2">
-          <ProcedureCard v-for="x in paged.items.value" :key="x.name" :p="x" />
-        </div>
-        <Pager v-model:page="paged.page.value" :pages="paged.pages.value" :total="paged.total.value" :size="paged.size" />
-      </template>
-    </template>
-
-    <!-- procedure types -->
-    <template v-else>
       <div v-if="!templates" class="grid gap-2.5 md:grid-cols-2"><div v-for="i in 4" :key="i" class="surface h-36 animate-pulse" /></div>
       <div v-else-if="!templates.length" class="surface">
         <EmptyState icon="lucide-list-plus" :title="t('No treatment types yet')"
@@ -83,49 +50,25 @@
         {{ showHidden ? t('Hide the hidden ones') : t('Show hidden types ({0})', hiddenTemplates.length) }}
       </button>
       </template>
-    </template>
   </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'frappe-ui'
 import Btn from '@/components/Btn.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import ProcedureCard from '@/components/ProcedureCard.vue'
-import Pager from '@/components/Pager.vue'
-import { usePaged } from '@/paging'
 import { get, post } from '@/api'
 import { t } from '@/i18n'
 import { num } from '@/format'
 import { ui, changed, H, openProcedure, openTemplate } from '@/ui'
 
-const route = useRoute()
-const router = useRouter()
-const tabs = [
-  { value: 'records', label: 'Recorded', icon: 'lucide-stethoscope' },
-  { value: 'types', label: 'Treatment types', icon: 'lucide-list-checks' },
-]
-const states = [
-  { value: 'all', label: 'All' },
-  { value: 'planned', label: 'Planned' },
-  { value: 'done', label: 'Done' },
-  { value: 'cancelled', label: 'Cancelled' },
-]
-const tab = ref(route.query.tab === 'types' ? 'types' : 'records')
-const state = ref('all')
-const rows = ref(null)
 const templates = ref(null)
 const showHidden = ref(false)
 const activeTemplates = computed(() => (templates.value || []).filter((x) => !x.disabled))
 const hiddenTemplates = computed(() => (templates.value || []).filter((x) => x.disabled))
 const shownTemplates = computed(() => (showHidden.value || !activeTemplates.value.length ? templates.value : activeTemplates.value))
-
-const shown = computed(() => (rows.value || []).filter((r) => state.value === 'all' || r.state === state.value))
-const paged = usePaged(shown, 10)
-const count = (s) => (rows.value || []).filter((r) => s === 'all' || r.state === s).length
 
 async function reactivate(tp) {
   try {
@@ -140,12 +83,10 @@ async function reactivate(tp) {
 
 async function load() {
   try {
-    if (tab.value === 'records') rows.value = await get(H('procedures'), { limit: 300 })
-    else templates.value = await get(H('procedure_templates'), { include_disabled: 1 })
+    templates.value = await get(H('procedure_templates'), { include_disabled: 1 })
   } catch (e) {
     toast.error(e.message)
   }
 }
-watch(tab, () => router.replace({ query: tab.value === 'types' ? { tab: 'types' } : {} }))
-watch([tab, () => ui.version], load, { immediate: true })
+watch(() => ui.version, load, { immediate: true })
 </script>

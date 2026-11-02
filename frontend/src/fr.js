@@ -680,4 +680,6 @@ export default {
   "People who can use the app. Each one is also a doctor, so they can run consultations.": "Les personnes qui peuvent utiliser l’application. Chacune est aussi médecin : elle peut faire des consultations.",
   "Finish": "Terminer",
   "Open a patient and start a consultation.": "Ouvrez un patient et commencez une consultation.",
+  "The cares you give, and the medicines each one uses. Record a treatment from the patient’s file.": "Les soins que vous faites, et les médicaments de chacun. Enregistrez un soin depuis le dossier du patient.",
+  "Types": "Types",
 }
