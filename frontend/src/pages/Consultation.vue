@@ -129,12 +129,12 @@
 
         <p v-if="error" class="flex items-center gap-2 rounded-[12px] bg-alert-soft px-3.5 py-2.5 text-[13px] text-alert"><span class="lucide-circle-alert size-4 shrink-0" />{{ error }}</p>
 
-        <div class="fixed inset-x-0 bottom-[84px] z-20 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur lg:static lg:inset-auto lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          <div class="mx-auto flex max-w-[1200px] items-center gap-2 lg:justify-end">
+        <div class="fixed inset-x-0 bottom-[84px] z-20 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur md:static md:inset-auto md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <div class="mx-auto flex max-w-[1200px] items-center gap-2 md:justify-end">
             <Btn v-if="!isNew" variant="ghost" icon="lucide-trash-2" :label="t('Discard')" class="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" @click="discard" />
-            <div class="flex flex-1 gap-2 lg:flex-none">
-              <Btn class="flex-1 lg:flex-none" :label="t('Save draft')" :loading="saving === 'draft'" @click="save(false)" />
-              <Btn class="flex-1 lg:flex-none" variant="primary" icon="lucide-check" :loading="saving === 'finish'" @click="save(true)">
+            <div class="flex flex-1 gap-2 md:flex-none">
+              <Btn class="flex-1 md:flex-none" :label="t('Save draft')" :loading="saving === 'draft'" @click="save(false)" />
+              <Btn class="flex-1 md:flex-none" variant="primary" icon="lucide-check" :loading="saving === 'finish'" @click="save(true)">
                 <span class="sm:hidden">{{ t('Finish') }}</span><span class="hidden sm:inline">{{ t('Finish consultation') }}</span>
               </Btn>
             </div>
