@@ -1,6 +1,13 @@
 <template>
   <div>
-    <PageHeader :eyebrow="t('Stock out')" :title="t('Give out stock')" :subtitle="t('Record medicine leaving the store, for example given to a patient.')" />
+    <PageHeader :eyebrow="t('Stock out')" :title="t('Give out stock')" :subtitle="t('Record medicine that leaves the store without a patient: damaged, expired or adjusted.')">
+      <template v-if="session.health" #meta>
+        <p class="mt-2 flex items-center gap-1.5 text-[13px] text-ink-mute">
+          <span class="lucide-info size-3.5 shrink-0" /> {{ t('Medicine given to a patient is recorded as a procedure.') }}
+          <RouterLink to="/procedures" class="font-medium text-apo hover:underline">{{ t('Open procedures') }}</RouterLink>
+        </p>
+      </template>
+    </PageHeader>
 
     <div class="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
       <form class="surface rise p-5 md:p-7" @submit.prevent="save">
@@ -47,8 +54,7 @@
           </div>
         </div>
 
-        <FormControl v-model="form.recipient" class="mt-7" :label="recipientLabel" size="lg" variant="outline"
-          :placeholder="form.reason === 'Dispensed to a patient' ? t('Patient name or file number') : t('Optional')" />
+        <FormControl v-model="form.recipient" class="mt-7" :label="t('Note')" size="lg" variant="outline" :placeholder="t('Optional')" />
 
         <p v-if="error" class="mt-5 flex items-center gap-2 rounded-[12px] bg-alert-soft px-3.5 py-2.5 text-[13px] text-alert">
           <span class="lucide-circle-alert size-4 shrink-0" />{{ error }}
@@ -91,17 +97,16 @@ import MedicinePicker from '@/components/MedicinePicker.vue'
 import { get, write } from '@/api'
 import { t } from '@/i18n'
 import { date, num, shortDate } from '@/format'
+import { session } from '@/session'
 import { ui, changed } from '@/ui'
 
 const route = useRoute()
 const reasons = [
-  { value: 'Dispensed to a patient', icon: 'lucide-user-round' },
-  { value: 'Transfer to another store or department', icon: 'lucide-truck' },
   { value: 'Damaged stock', icon: 'lucide-package-x' },
   { value: 'Expired stock', icon: 'lucide-calendar-x' },
   { value: 'Other authorized adjustment', icon: 'lucide-sliders-horizontal' },
 ]
-const blank = () => ({ medicine: route.query.medicine || null, qty: 1, reason: route.query.reason || 'Dispensed to a patient', recipient: '' })
+const blank = () => ({ medicine: route.query.medicine || null, qty: 1, reason: route.query.reason || 'Damaged stock', recipient: '' })
 const form = reactive(blank())
 const picked = ref(null)
 const saving = ref(false)
@@ -110,8 +115,6 @@ const recent = ref([])
 
 const expiredReason = computed(() => form.reason === 'Expired stock')
 const available = computed(() => (picked.value ? (expiredReason.value ? picked.value.expired_qty : picked.value.stock - picked.value.expired_qty) : 0))
-const recipientLabel = computed(() =>
-  form.reason === 'Dispensed to a patient' ? t('Patient') : form.reason.startsWith('Transfer') ? t('Store or department') : t('Note'))
 
 const step = (d) => (form.qty = Math.max(1, (Number(form.qty) || 0) + d))
 function reset() {

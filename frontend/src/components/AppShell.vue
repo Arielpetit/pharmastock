@@ -204,7 +204,7 @@ const sections = computed(() => [
     { to: '/', label: 'Dashboard', icon: 'lucide-layout-grid', exact: true },
     { to: '/medicines', label: 'Medicines', icon: 'lucide-pill' },
     { to: '/give-out', label: 'Give out stock', icon: 'lucide-hand-heart' },
-    { to: '/requests', label: 'Stock requests', icon: 'lucide-clipboard-list', badge: pending.value || null },
+    { to: '/requests', label: 'Medical requests', icon: 'lucide-clipboard-list', badge: pending.value || null },
     { to: '/reports', label: 'Reports', icon: 'lucide-chart-no-axes-column' },
   ] },
   ...(session.health ? [{ label: 'Care', items: [
@@ -230,7 +230,7 @@ const userMenu = computed(() => [
   { label: t('My account'), icon: 'lucide-user-round', route: { name: 'account' } },
   { label: t('Notifications'), icon: 'lucide-bell', route: { name: 'notifications' } },
   ...(session.health ? [
-    { label: pending.value ? `${t('Stock requests')} (${pending.value})` : t('Stock requests'), icon: 'lucide-clipboard-list', route: { name: 'requests' } },
+    { label: pending.value ? `${t('Medical requests')} (${pending.value})` : t('Medical requests'), icon: 'lucide-clipboard-list', route: { name: 'requests' } },
     { label: t('Reports'), icon: 'lucide-chart-no-axes-column', route: { name: 'reports' } },
   ] : []),
   ...(session.isAdmin ? [{ label: t('Staff'), icon: 'lucide-users-round', route: { name: 'staff' } }] : []),

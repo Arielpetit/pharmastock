@@ -79,13 +79,14 @@ b = staff.post("add_stock", {"medicine": name, "qty": 40, "price": 10, "expiry":
 check("add stock is idempotent per client_id", a["stock_entry"] == b["stock_entry"] and b.get("duplicate"))
 med = staff.get("medicine", {"code": name})
 check("stock 140 in 2 batches", med["stock"] == 140 and len(med["batches"]) == 2)
-out = staff.post("give_out", {"medicine": name, "qty": 50, "reason": "Dispensed to a patient", "recipient": "Test patient",
+out = staff.post("give_out", {"medicine": name, "qty": 50, "reason": "Other authorized adjustment", "recipient": "Test note",
 							  "client_id": str(uuid.uuid4())})
 med = staff.get("medicine", {"code": name})
 check("give out takes earliest expiry first (2029 batch 40 -> 0, 2030 batch 100 -> 90)",
 	  med["stock"] == 90 and len(med["batches"]) == 1 and med["batches"][0]["qty"] == 90
 	  and str(med["batches"][0]["expiry_date"]).startswith("2030"))
-fails("cannot give out more than stock", lambda: staff.post("give_out", {"medicine": name, "qty": 1000, "reason": "Dispensed to a patient"}),
+fails("the retired reasons are refused", lambda: staff.post("give_out", {"medicine": name, "qty": 1, "reason": "Dispensed to a patient"}), "reason")
+fails("cannot give out more than stock", lambda: staff.post("give_out", {"medicine": name, "qty": 1000, "reason": "Other authorized adjustment"}),
 	  "not enough")
 fails("cannot throw away expired stock when none is expired",
 	  lambda: staff.post("give_out", {"medicine": name, "qty": 1, "reason": "Expired stock"}), "expired units")

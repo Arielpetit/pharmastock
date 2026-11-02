@@ -7,7 +7,7 @@
         <p v-if="data" class="mt-2 text-[14px] text-ink-mute md:text-[15px]">{{ summary }}</p>
       </div>
       <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-        <Btn icon="lucide-clipboard-list" :label="t('Request stock')" @click="openRequest()" />
+        <Btn icon="lucide-clipboard-list" :label="t('Medical request')" @click="openRequest()" />
         <Btn class="hidden sm:inline-flex" icon="lucide-hand-heart" :label="t('Give out')" to="/give-out" />
         <Btn v-if="session.health" class="hidden md:inline-flex" icon="lucide-stethoscope" :label="t('Record a procedure')" @click="openProcedure()" />
         <Btn variant="primary" icon="lucide-plus" :label="t('Add stock')" @click="openAddStock()" />

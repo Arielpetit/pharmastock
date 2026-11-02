@@ -20,9 +20,9 @@ STAFF_ROLES = ("Pharmacy Staff", "Pharmacy Admin", "System Manager")
 ADMIN_ROLES = ("Pharmacy Admin", "System Manager")
 PHARMACY_ROLES = ("Pharmacy Staff", "Pharmacy Admin")
 EXPIRY_WARNING_DAYS = 90
+# Why stock may leave without a patient. Medicine for a patient leaves through a procedure ("Used in a procedure").
+# Older entries keep their earlier reasons ("Dispensed to a patient", "Transfer to ...") in the history.
 REASONS = [
-	"Dispensed to a patient",
-	"Transfer to another store or department",
 	"Damaged stock",
 	"Expired stock",
 	"Other authorized adjustment",

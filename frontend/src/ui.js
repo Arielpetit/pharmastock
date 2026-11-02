@@ -1,4 +1,4 @@
-// Shared dialog state, so any page can open "Add stock", "New medicine" or "Request stock",
+// Shared dialog state, so any page can open "Add stock", "New medicine" or "Medical request",
 // and a counter pages watch to reload after a stock change.
 import { reactive } from 'vue'
 

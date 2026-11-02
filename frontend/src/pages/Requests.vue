@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader :eyebrow="t('Ordering')" :title="t('Stock requests')"
+    <PageHeader :eyebrow="t('Ordering')" :title="t('Medical requests')"
       :subtitle="session.isAdmin ? t('Approve or reject what your team asks for.') : t('Ask for medicines you need before ordering.')">
       <template #actions>
         <Btn variant="primary" icon="lucide-plus" :label="t('New request')" @click="openRequest()" />

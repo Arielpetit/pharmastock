@@ -177,7 +177,7 @@ def _alert(subject, **fields):
 
 
 def create_alerts():
-	"""Bell notifications for expiring batches and new stock requests."""
+	"""Bell notifications for expiring batches and new medical requests."""
 	_alert(
 		"Expiring: {{ doc.item }} batch {{ doc.name }}", document_type="Batch", event="Days Before",
 		date_changed="expiry_date", days_in_advance=60, channel="System Notification", condition="doc.batch_qty > 0",
@@ -190,8 +190,10 @@ def create_alerts():
 		message="Stock fell below the minimum level. Request {{ doc.name }} was created.",
 		recipients=[{"receiver_by_role": "Pharmacy Admin"}],
 	)
+	# renamed from "Stock request ...": drop the old notification so a site does not get both
+	frappe.db.delete("Notification", {"subject": "Stock request waiting for approval: {{ doc.name }} ({{ doc.custom_urgency }})"})
 	_alert(
-		"Stock request waiting for approval: {{ doc.name }} ({{ doc.custom_urgency }})", document_type="Material Request",
+		"Medical request waiting for approval: {{ doc.name }} ({{ doc.custom_urgency }})", document_type="Material Request",
 		event="New", channel="System Notification", condition="not doc.auto_created_via_reorder", enabled=1,
 		message="{{ doc.owner }} asked for stock. Urgency: {{ doc.custom_urgency }}. {{ doc.custom_reason or '' }}",
 		recipients=[{"receiver_by_role": "Pharmacy Admin"}],

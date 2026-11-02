@@ -1,5 +1,5 @@
 <template>
-  <Sheet v-model:open="ui.request.open" :title="t('Request stock')"
+  <Sheet v-model:open="ui.request.open" :title="t('Medical request')"
     :message="t('Ask for medicine to be ordered. An administrator approves the request. It does not add stock.')"
     icon="lucide-clipboard-list" theme="blue" size="lg">
     <form class="grid grid-cols-2 gap-4" @submit.prevent="save">
@@ -65,7 +65,7 @@ async function save() {
   if (!(Number(form.qty) > 0)) return (error.value = t('Please enter a quantity above 0.'))
   saving.value = true
   try {
-    const res = await write('request_stock', { ...form }, t('Request stock'))
+    const res = await write('request_stock', { ...form }, t('Medical request'))
     ui.request.open = false
     if (res.queued) toast.info(t('Saved offline'), { description: t('The request will be sent when you are back online.') })
     else toast.success(t('Request sent'), { description: t('It is waiting for approval.') })
