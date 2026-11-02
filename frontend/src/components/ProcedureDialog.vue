@@ -1,12 +1,12 @@
 <template>
-  <Sheet v-model:open="ui.procedure.open" :title="t('Record a procedure')"
+  <Sheet v-model:open="ui.procedure.open" :title="t('Record a treatment')"
     :message="t('The medicines used are taken from the pharmacy stock and written in the patient’s file.')"
     icon="lucide-stethoscope" theme="green" size="2xl">
     <div v-if="templates && !templates.length" class="rounded-[16px] border border-dashed border-line p-5 text-center">
-      <p class="font-display text-[19px] text-ink">{{ hiddenCount ? t('No active procedure type') : t('No procedure types yet') }}</p>
-      <p class="mx-auto mt-1 max-w-sm text-[13px] text-ink-mute">{{ hiddenCount ? t('All your procedure types are hidden. Create a new one, or show a hidden one again below.') : t('First create the cares you give, like a wound dressing, with the medicines they use.') }}</p>
+      <p class="font-display text-[19px] text-ink">{{ hiddenCount ? t('No active treatment type') : t('No treatment types yet') }}</p>
+      <p class="mx-auto mt-1 max-w-sm text-[13px] text-ink-mute">{{ hiddenCount ? t('All your treatment types are hidden. Create a new one, or show a hidden one again below.') : t('First create the cares you give, like a wound dressing, with the medicines they use.') }}</p>
       <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-        <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="newTemplate" />
+        <Btn variant="primary" icon="lucide-plus" :label="t('New treatment type')" @click="newTemplate" />
         <Btn v-if="hiddenCount" icon="lucide-eye" :label="t('Show hidden types ({0})', hiddenCount)" @click="showHiddenTypes" />
       </div>
     </div>
@@ -16,7 +16,7 @@
         @click="newPatient"><span class="lucide-user-round-plus size-3.5" /> {{ t('New patient') }}</button>
 
       <div>
-        <div class="mb-1.5 text-[13px] text-ink-soft">{{ t('Procedure') }} <span class="text-alert">*</span></div>
+        <div class="mb-1.5 text-[13px] text-ink-soft">{{ t('Treatment') }} <span class="text-alert">*</span></div>
         <div v-if="!templates" class="h-10 animate-pulse rounded-[12px] bg-paper-deep" />
         <div v-else class="flex flex-wrap gap-1.5">
           <button v-for="tp in templates" :key="tp.name" type="button"
@@ -115,17 +115,17 @@ function newPatient() {
 async function save() {
   error.value = ''
   if (!form.patient) return (error.value = t('Please choose a patient.'))
-  if (!form.template) return (error.value = t('Please choose a procedure.'))
+  if (!form.template) return (error.value = t('Please choose a treatment.'))
   const items = form.items.filter((r) => r.medicine)
   if (items.some((r) => !(Number(r.qty) > 0))) return (error.value = t('Please enter a quantity above 0.'))
   saving.value = true
   try {
     const res = await post(H('record_procedure'), {
-      patient: form.patient, template: form.template, date: form.date, notes: form.notes, complete: form.complete ? 1 : 0,
+      patient: form.patient, template: form.template, date: form.date, notes: form.notes, complete: form.complete ? 1 : 0, service_request: ui.procedure.serviceRequest || undefined,
       items: items.map((r) => ({ medicine: r.medicine, qty: Number(r.qty) })), client_id: crypto.randomUUID?.() || String(Date.now()),
     })
     ui.procedure.open = false
-    toast.success(res.status === 'Completed' ? t('Procedure recorded') : t('Procedure planned'),
+    toast.success(res.status === 'Completed' ? t('Treatment recorded') : t('Treatment planned'),
       { description: res.status === 'Completed' && items.length ? t('{0} medicine(s) taken from stock', items.length) : '' })
     changed()
   } catch (e) {

@@ -46,7 +46,7 @@ def has_health():
 
 def _require_health():
 	if not has_health():
-		frappe.throw(_("Patients and procedures need the Frappe Health app on this site."))
+		frappe.throw(_("Patients and treatments need the Frappe Health app on this site."))
 
 
 def _ensure(doctype, name, **fields):
@@ -190,6 +190,11 @@ def patient(name):
 											  "blood_group", "allergies", "medical_history", "creation", "owner"], as_dict=True)
 	_patient_row(p)
 	p.procedures = procedures(patient=name)
+	p.consultations = consultations(patient=name)
+	p.appointments = appointments(patient=name)
+	p.prescriptions = prescriptions(patient=name)
+	p.treatments_requested = treatments_requested(patient=name)
+	p.vitals = _vitals_rows({"patient": name, "docstatus": 1})
 	return p
 
 
@@ -271,7 +276,7 @@ def save_procedure_template(template, items, description=None, name=None, disabl
 	_require_health()
 	template = (template or "").strip()
 	if not template:
-		frappe.throw(_("Please enter the name of the procedure"))
+		frappe.throw(_("Please enter the name of the treatment type"))
 	rows = _items_arg(items)
 	fields = {"description": (description or "").strip() or template, "consume_stock": 1 if rows else 0,
 			  "disabled": cint(disabled)}
@@ -282,7 +287,7 @@ def save_procedure_template(template, items, description=None, name=None, disabl
 		doc.save(ignore_permissions=True)
 		return {"name": doc.name}
 	if frappe.db.exists("Clinical Procedure Template", template):
-		frappe.throw(_("A procedure named {0} already exists").format(template), frappe.DuplicateEntryError)
+		frappe.throw(_("A treatment type named {0} already exists").format(template), frappe.DuplicateEntryError)
 	group = _ensure("Item Group", PROCEDURE_GROUP, item_group_name=PROCEDURE_GROUP, parent_item_group="All Item Groups", is_group=0)
 	# Frappe Health also creates a (service) Item for the procedure, named like the template
 	item_code = template if not frappe.db.exists("Item", template) else f"{template} (procedure)"
@@ -367,7 +372,7 @@ def _complete(cp):
 
 @frappe.whitelist(methods=["POST"])
 @_writes(admin=False)
-def record_procedure(patient, template, items=None, date=None, notes=None, complete=1, client_id=None):
+def record_procedure(patient, template, items=None, date=None, notes=None, complete=1, client_id=None, service_request=None):
 	"""Record a procedure for a patient. With `complete`, its medicines leave the store right away."""
 	_require_health()
 	if client_id and (done := frappe.db.get_value("Clinical Procedure", {"custom_client_id": client_id}, "name")):
@@ -375,24 +380,30 @@ def record_procedure(patient, template, items=None, date=None, notes=None, compl
 	if not frappe.db.exists("Patient", patient):
 		frappe.throw(_("Please choose a patient"))
 	if not frappe.db.exists("Clinical Procedure Template", template):
-		frappe.throw(_("Please choose a procedure"))
+		frappe.throw(_("Please choose a treatment"))
 	rows = _items_arg(items) if items is not None else [
 		{"item_code": r.medicine, "item_name": r.medicine_name, "qty": r.qty, "uom": r.unit, "stock_uom": r.unit,
 		 "conversion_factor": 1, "transfer_qty": r.qty} for r in _item_rows(template, "Clinical Procedure Template")]
 	date = getdate(date or nowdate())
 	if date > getdate():
 		frappe.throw(_("The date cannot be in the future"))
+	if service_request:  # a treatment the doctor asked for in a consultation
+		sr = frappe.db.get_value("Service Request", service_request, ["patient", "template_dn", "docstatus", "status"], as_dict=True)
+		if not sr or sr.patient != patient or sr.template_dn != template or sr.docstatus != 1:
+			frappe.throw(_("This treatment was not asked for this patient"))
 	cp = frappe.get_doc({
 		"doctype": "Clinical Procedure", "owner": _owner(), "patient": patient, "procedure_template": template,
 		"patient_name": frappe.db.get_value("Patient", patient, "patient_name"),
 		"company": _company(), "warehouse": _warehouse(), "start_date": date, "consume_stock": 1 if rows else 0,
-		"notes": notes or "", "items": rows, "custom_client_id": client_id,
+		"notes": notes or "", "items": rows, "custom_client_id": client_id, "service_request": service_request or None,
 	})
 	cp.flags.ignore_permissions = True
 	cp.insert()
 	cp.submit()
 	_keep_owner(cp)
 	entry = _complete(cp) if cint(complete) else None
+	if service_request and cint(complete):
+		frappe.db.set_value("Service Request", service_request, "status", "completed-Request Status")
 	return {"name": cp.name, "stock_entry": entry, "status": frappe.db.get_value("Clinical Procedure", cp.name, "status")}
 
 
@@ -403,7 +414,7 @@ def complete_procedure(name):
 	_require_health()
 	cp = frappe.get_doc("Clinical Procedure", name)
 	if cp.docstatus != 1 or cp.status == "Cancelled":
-		frappe.throw(_("This procedure was cancelled"))
+		frappe.throw(_("This treatment was cancelled"))
 	return {"name": cp.name, "stock_entry": _complete(cp)}
 
 
@@ -419,11 +430,11 @@ def cancel_procedure(name, reason=None):
 	_require_health()
 	cp = frappe.get_doc("Clinical Procedure", name)
 	if cp.docstatus == 2:
-		frappe.throw(_("This procedure is already cancelled"))
+		frappe.throw(_("This treatment is already cancelled"))
 	reason = (reason or "").strip()
 	completed = cp.status == "Completed"
 	if completed and not reason:
-		frappe.throw(_("Please give the reason for cancelling this procedure"))
+		frappe.throw(_("Please give the reason for cancelling this treatment"))
 	if completed:
 		for se in frappe.get_all("Stock Entry", filters={"custom_clinical_procedure": cp.name, "docstatus": 1}, pluck="name"):
 			entry = frappe.get_doc("Stock Entry", se)
@@ -433,6 +444,377 @@ def cancel_procedure(name, reason=None):
 	cp.cancel()
 	cp.db_set({"custom_cancel_reason": reason, "custom_cancelled_by": _owner()}, update_modified=False)
 	return {"name": cp.name, "stock_returned": completed}
+
+
+# ------------------------------------------------------------------ doctors (Healthcare Practitioner)
+
+APPOINTMENT_TYPE = "Consultation"
+DOSAGES = ["Once Daily", "BID", "TID", "QID", "Once Bedtime"]
+DURATIONS = ["1 Day", "2 Day", "3 Day", "5 Day", "1 Week", "2 Week", "1 Month"]
+VITALS = ("temperature", "pulse", "respiratory_rate", "bp_systolic", "bp_diastolic", "weight", "height")
+
+
+def sync_practitioner(user):
+	"""Every pharmacy user is also a Healthcare Practitioner, so any of them can run a consultation.
+
+	Called when a user is created or changed in the app, and for all pharmacy users on update.
+	"""
+	if not has_health() or not frappe.db.exists("User", user):
+		return None
+	u = frappe.db.get_value("User", user, ["first_name", "last_name", "full_name", "enabled"], as_dict=True)
+	status = "Active" if u.enabled else "Disabled"
+	name = frappe.db.get_value("Healthcare Practitioner", {"user_id": user}, "name")
+	if name:
+		frappe.db.set_value("Healthcare Practitioner", name, "status", status)
+		return name
+	doc = frappe.get_doc({"doctype": "Healthcare Practitioner", "first_name": u.first_name or u.full_name or user,
+						  "last_name": u.last_name or "", "status": status, "user_id": user})
+	doc.insert(ignore_permissions=True)
+	return doc.name
+
+
+def sync_all_practitioners():
+	users = frappe.get_all("Has Role", filters={"role": ["in", ["Pharmacy Staff", "Pharmacy Admin"]], "parenttype": "User"}, pluck="parent")
+	for user in set(users):
+		try:
+			sync_practitioner(user)
+		except Exception:
+			frappe.log_error(f"PharmaStock: could not create a practitioner for {user}")
+
+
+def _my_practitioner():
+	return frappe.db.get_value("Healthcare Practitioner", {"user_id": _owner(), "status": "Active"}, "name")
+
+
+def ensure_appointment_type():
+	if not frappe.db.exists("Appointment Type", APPOINTMENT_TYPE):
+		frappe.get_doc({"doctype": "Appointment Type", "appointment_type": APPOINTMENT_TYPE, "allow_booking_for": "Practitioner",
+						"default_duration": 20}).insert(ignore_permissions=True)
+	return APPOINTMENT_TYPE
+
+
+@frappe.whitelist()
+def practitioners():
+	"""Doctors who can be chosen for an appointment or a consultation."""
+	_require_staff()
+	_require_health()
+	rows = frappe.get_all("Healthcare Practitioner", filters={"status": "Active"}, fields=["name", "practitioner_name", "user_id"],
+						  order_by="practitioner_name asc")
+	me = frappe.session.user
+	for r in rows:
+		r.me = r.user_id == me
+	return rows
+
+
+# ------------------------------------------------------------------ appointments
+
+def _appt_state(status):
+	return "cancelled" if status == "Cancelled" else "done" if status in ("Closed", "Checked Out") else "waiting"
+
+
+@frappe.whitelist()
+def appointments(date=None, patient=None, status=None):
+	"""Appointments of one day (default today), or all of a patient's. status: waiting | done | cancelled."""
+	_require_staff()
+	_require_health()
+	filters = {}
+	if patient:
+		filters["patient"] = patient
+	else:
+		filters["appointment_date"] = getdate(date or nowdate())
+	rows = frappe.get_all("Patient Appointment", filters=filters,
+						  fields=["name", "patient", "patient_name", "practitioner", "practitioner_name", "appointment_date",
+								  "appointment_time", "duration", "status", "notes"],
+						  order_by="appointment_date desc, appointment_time asc" if patient else "appointment_time asc", limit=300)
+	for r in rows:
+		r.state = _appt_state(r.status)
+		r.time = str(r.appointment_time)[:5] if r.appointment_time else ""
+		r.consultation = frappe.db.get_value("Patient Encounter", {"appointment": r.name, "docstatus": ["<", 2]}, "name")
+		r.pop("appointment_time", None)
+	return [r for r in rows if not status or r.state == status]
+
+
+@frappe.whitelist(methods=["POST"])
+@_writes(admin=False)
+def save_appointment(patient, practitioner, date, time, duration=20, notes=None):
+	"""Book an appointment with a doctor."""
+	_require_health()
+	if not frappe.db.exists("Patient", patient):
+		frappe.throw(_("Please choose a patient"))
+	if not frappe.db.exists("Healthcare Practitioner", {"name": practitioner, "status": "Active"}):
+		frappe.throw(_("Please choose a doctor"))
+	if not date or getdate(date) < getdate():
+		frappe.throw(_("Please choose today or a later day"))
+	if not time:
+		frappe.throw(_("Please choose a time"))
+	doc = frappe.get_doc({
+		"doctype": "Patient Appointment", "owner": _owner(), "company": _company(), "patient": patient, "appointment_for": "Practitioner",
+		"practitioner": practitioner, "appointment_type": ensure_appointment_type(), "appointment_date": getdate(date),
+		"appointment_time": time if len(str(time)) > 5 else f"{time}:00", "duration": cint(duration) or 20, "notes": notes or "",
+	})
+	doc.insert(ignore_permissions=True)
+	_keep_owner(doc)
+	return {"name": doc.name}
+
+
+@frappe.whitelist(methods=["POST"])
+@_writes(admin=False)
+def cancel_appointment(name):
+	_require_health()
+	status = frappe.db.get_value("Patient Appointment", name, "status")
+	if status in ("Closed", "Checked Out"):
+		frappe.throw(_("This appointment is already finished"))
+	if status != "Cancelled":
+		frappe.db.set_value("Patient Appointment", name, "status", "Cancelled")
+	return {"name": name}
+
+
+# ------------------------------------------------------------------ consultations (Patient Encounter)
+
+def _named(doctype, field, names):
+	"""Rows for a MultiSelect table: each name is looked up or created in the list (Complaint, Diagnosis)."""
+	out = []
+	for n in dict.fromkeys((x or "").strip() for x in (names or [])):
+		if not n:
+			continue
+		if not frappe.db.exists(doctype, n):
+			frappe.get_doc({"doctype": doctype, field: n}).insert(ignore_permissions=True)
+		out.append(n)
+	return out
+
+
+@frappe.whitelist()
+def suggestions(kind):
+	"""Names already used for symptoms (kind=symptoms) or diagnoses (kind=diagnoses): helps typing."""
+	_require_staff()
+	_require_health()
+	doctype, field = ("Complaint", "complaints") if kind == "symptoms" else ("Diagnosis", "diagnosis")
+	return frappe.get_all(doctype, pluck=field, order_by="modified desc", limit=200)
+
+
+def _prescription_rows(items):
+	rows = []
+	for r in items or []:
+		code = r.get("medicine")
+		if not code:
+			continue
+		item = frappe.db.get_value("Item", {"name": code, "disabled": 0}, ["name", "item_name", "custom_medication"], as_dict=True)
+		if not item:
+			frappe.throw(_("Medicine not found: {0}").format(code))
+		med = item.custom_medication or _medication_of(code)
+		if not med:
+			frappe.throw(_("{0} has no medication record yet. Open it in Medicines and save it once.").format(item.item_name))
+		dosage = r.get("dosage") or "Once Daily"
+		period = r.get("period") or "1 Week"
+		if dosage not in DOSAGES or period not in DURATIONS:
+			frappe.throw(_("Please choose how often and for how long for {0}").format(item.item_name))
+		rows.append({"medication": med, "drug_code": item.name, "drug_name": item.item_name, "dosage": dosage, "period": period,
+					 "dosage_form": frappe.db.get_value("Medication", med, "dosage_form") or "Tablet", "comment": r.get("comment") or ""})
+	return rows
+
+
+def _save_vitals(doc, vitals, finish):
+	vitals = {k: v for k, v in (vitals or {}).items() if k in VITALS and str(v or "").strip() != ""}
+	existing = frappe.db.get_value("Vital Signs", {"encounter": doc.name, "docstatus": 0}, "name")
+	if not vitals:
+		if existing:
+			frappe.delete_doc("Vital Signs", existing, ignore_permissions=True)
+		return
+	data = {k: (flt(v) if k in ("weight", "height") else str(v).strip()) for k, v in vitals.items()}
+	if existing:
+		vs = frappe.get_doc("Vital Signs", existing)
+		for k in VITALS:
+			vs.set(k, data.get(k))
+	else:
+		vs = frappe.get_doc({"doctype": "Vital Signs", "owner": _owner(), "patient": doc.patient, "encounter": doc.name,
+							 "appointment": doc.appointment or None, "signs_date": doc.encounter_date, "signs_time": doc.encounter_time,
+							 "naming_series": "HLC-VTS-.YYYY.-", "company": doc.company, **data})
+	vs.flags.ignore_permissions = True
+	vs.save()
+	if finish:
+		vs.submit()
+
+
+@frappe.whitelist(methods=["POST"])
+@_writes(admin=False)
+def save_consultation(patient, name=None, appointment=None, practitioner=None, date=None, symptoms=None, diagnoses=None, notes=None,
+					  vitals=None, prescriptions=None, treatments=None, finish=0):
+	"""Save a consultation as a draft, or finish it (the doctor's orders are then created).
+
+	Finishing creates a Prescription (Medication Request) per medicine and a requested Treatment (Service Request) per
+	treatment, and closes the appointment. A finished consultation cannot be edited.
+	"""
+	_require_health()
+	symptoms, diagnoses, prescriptions, treatments = [_loads(x) for x in (symptoms, diagnoses, prescriptions, treatments)]
+	vitals = _loads(vitals) or {}
+	if not frappe.db.exists("Patient", patient):
+		frappe.throw(_("Please choose a patient"))
+	practitioner = practitioner or _my_practitioner()
+	if not practitioner or not frappe.db.exists("Healthcare Practitioner", {"name": practitioner, "status": "Active"}):
+		frappe.throw(_("Please choose the doctor for this consultation"))
+	if appointment and frappe.db.get_value("Patient Appointment", appointment, "patient") != patient:
+		frappe.throw(_("This appointment belongs to another patient"))
+	date = getdate(date or nowdate())
+	if date > getdate():
+		frappe.throw(_("The date cannot be in the future"))
+	for tpl in treatments or []:
+		if not frappe.db.exists("Clinical Procedure Template", {"name": tpl, "disabled": 0}):
+			frappe.throw(_("Treatment type not found: {0}").format(tpl))
+	if cint(finish) and not (notes or symptoms or diagnoses or prescriptions or treatments):
+		frappe.throw(_("Write at least one observation before finishing"))
+	fields = {
+		"patient": patient, "patient_name": frappe.db.get_value("Patient", patient, "patient_name"),
+		"practitioner": practitioner, "company": _company(), "appointment": appointment or None,
+		"appointment_type": ensure_appointment_type(), "encounter_date": date, "encounter_comment": notes or "",
+	}
+	rows = {
+		"symptoms": [{"complaint": n} for n in _named("Complaint", "complaints", symptoms)],
+		"diagnosis": [{"diagnosis": n} for n in _named("Diagnosis", "diagnosis", diagnoses)],
+		"drug_prescription": _prescription_rows(prescriptions),
+		"procedure_prescription": [{"procedure": t} for t in dict.fromkeys(treatments or [])],
+	}
+	if name:
+		doc = frappe.get_doc("Patient Encounter", name)
+		if doc.docstatus != 0:
+			frappe.throw(_("A finished consultation cannot be changed"))
+		doc.update(fields)
+	else:
+		doc = frappe.get_doc({"doctype": "Patient Encounter", "owner": _owner(), "encounter_time": nowtime_str(), **fields})
+	for table, value in rows.items():
+		doc.set(table, value)
+	doc.flags.ignore_permissions = True
+	doc.save()
+	_keep_owner(doc)
+	_save_vitals(doc, vitals, cint(finish))
+	if cint(finish):
+		doc.submit()
+	return {"name": doc.name, "status": "done" if cint(finish) else "draft"}
+
+
+def nowtime_str():
+	return frappe.utils.nowtime().split(".")[0]
+
+
+def _loads(value):
+	if isinstance(value, str):
+		return json.loads(value or "null")
+	return value
+
+
+@frappe.whitelist(methods=["POST"])
+@_writes(admin=False)
+def discard_consultation(name):
+	"""Delete a draft consultation. A finished one stays in the file."""
+	_require_health()
+	if frappe.db.get_value("Patient Encounter", name, "docstatus") != 0:
+		frappe.throw(_("A finished consultation cannot be deleted"))
+	for vs in frappe.get_all("Vital Signs", filters={"encounter": name, "docstatus": 0}, pluck="name"):
+		frappe.delete_doc("Vital Signs", vs, ignore_permissions=True)
+	frappe.delete_doc("Patient Encounter", name, ignore_permissions=True)
+	return {"name": name}
+
+
+def _consultation_row(r):
+	if not r.get("patient_name"):
+		r.patient_name = frappe.db.get_value("Patient", r.patient, "patient_name")
+	if not r.get("practitioner_name"):
+		r.practitioner_name = frappe.db.get_value("Healthcare Practitioner", r.practitioner, "practitioner_name")
+	r.state = "done" if r.docstatus == 1 else "cancelled" if r.docstatus == 2 else "draft"
+	r.symptoms = frappe.get_all("Patient Encounter Symptom", filters={"parent": r.name}, pluck="complaint", order_by="idx")
+	r.diagnoses = frappe.get_all("Patient Encounter Diagnosis", filters={"parent": r.name}, pluck="diagnosis", order_by="idx")
+	r.prescription_count = frappe.db.count("Drug Prescription", {"parent": r.name})
+	r.treatment_count = frappe.db.count("Procedure Prescription", {"parent": r.name})
+	return r
+
+
+@frappe.whitelist()
+def consultations(patient=None, limit=100):
+	_require_staff()
+	_require_health()
+	filters = {"docstatus": ["<", 2]}
+	if patient:
+		filters["patient"] = patient
+	rows = frappe.get_all("Patient Encounter", filters=filters,
+						  fields=["name", "patient", "patient_name", "practitioner", "practitioner_name", "encounter_date", "encounter_time",
+								  "encounter_comment", "docstatus", "appointment"],
+						  order_by="encounter_date desc, encounter_time desc", limit=cint(limit))
+	for r in rows:
+		r.time = str(r.encounter_time)[:5] if r.encounter_time else ""
+		_consultation_row(r)
+	return rows
+
+
+def _vitals_rows(filters):
+	rows = frappe.get_all("Vital Signs", filters=filters,
+						  fields=["name", "patient", "signs_date", "signs_time", "temperature", "pulse", "respiratory_rate", "bp_systolic",
+								  "bp_diastolic", "bp", "weight", "height", "bmi", "docstatus", "encounter"],
+						  order_by="signs_date desc, signs_time desc", limit=50)
+	for r in rows:
+		r.bp = r.bp or (f"{r.bp_systolic}/{r.bp_diastolic}" if r.bp_systolic and r.bp_diastolic else "")
+	return rows
+
+
+@frappe.whitelist()
+def consultation(name):
+	"""One consultation with everything the doctor wrote and ordered."""
+	_require_staff()
+	_require_health()
+	if not frappe.db.exists("Patient Encounter", name):
+		frappe.throw(_("Consultation not found"), frappe.DoesNotExistError)
+	r = frappe.db.get_value("Patient Encounter", name,
+							["name", "patient", "patient_name", "practitioner", "practitioner_name", "encounter_date", "encounter_time",
+							 "encounter_comment", "docstatus", "appointment", "creation", "owner"], as_dict=True)
+	r.time = str(r.encounter_time)[:5] if r.encounter_time else ""
+	_consultation_row(r)
+	r.prescriptions = frappe.get_all("Drug Prescription", filters={"parent": name},
+									 fields=["drug_code as medicine", "drug_name as medicine_name", "dosage", "period", "comment", "medication_request"], order_by="idx")
+	for p in r.prescriptions:
+		if p.medication_request:
+			mr = frappe.db.get_value("Medication Request", p.medication_request, ["quantity", "status"], as_dict=True) or {}
+			p.quantity, p.request_status = mr.get("quantity"), mr.get("status")
+	r.treatments = frappe.get_all("Procedure Prescription", filters={"parent": name},
+								  fields=["procedure as template", "service_request"], order_by="idx")
+	for t in r.treatments:
+		t.status = frappe.db.get_value("Service Request", t.service_request, "status") if t.service_request else None
+		t.done = bool(t.status and t.status.startswith("completed"))
+	r.vitals = (_vitals_rows({"encounter": name, "docstatus": ["<", 2]}) or [None])[0]
+	return r
+
+
+# ------------------------------------------------------------------ prescriptions (Medication Request) and orders
+
+@frappe.whitelist()
+def prescriptions(patient=None, limit=100):
+	"""Medicines a doctor prescribed (Medication Requests). They do not move stock."""
+	_require_staff()
+	_require_health()
+	filters = {"docstatus": ["<", 2]}
+	if patient:
+		filters["patient"] = patient
+	rows = frappe.get_all("Medication Request", filters=filters,
+						  fields=["name", "patient", "patient_name", "medication", "medication_item", "quantity", "dosage", "period", "comment",
+								  "status", "order_date", "practitioner_name", "order_group"], order_by="order_date desc, creation desc", limit=cint(limit))
+	for r in rows:
+		r.medicine_name = frappe.db.get_value("Item", r.medication_item, "item_name") if r.medication_item else r.medication
+		r.stopped = (r.status or "").startswith(("stopped", "cancelled", "completed"))
+		r.state = "done" if (r.status or "").startswith("completed") else "cancelled" if (r.status or "").startswith(("stopped", "cancelled")) else "active"
+	return rows
+
+
+@frappe.whitelist()
+def treatments_requested(patient=None):
+	"""Treatments a doctor asked for in a consultation and that nobody has recorded yet."""
+	_require_staff()
+	_require_health()
+	filters = {"docstatus": 1, "template_dt": "Clinical Procedure Template", "status": ["like", "active%"]}
+	if patient:
+		filters["patient"] = patient
+	rows = frappe.get_all("Service Request", filters=filters,
+						  fields=["name", "patient", "patient_name", "template_dn as template", "order_date", "practitioner_name", "order_group"],
+						  order_by="order_date desc", limit=100)
+	for r in rows:
+		r.consultation = r.order_group
+	return rows
 
 
 def care_summary():
@@ -451,6 +833,9 @@ def care_summary():
 		"week": [{"date": str(frappe.utils.add_days(week, i)), "count": by_day.get(getdate(frappe.utils.add_days(week, i)), 0)}
 				 for i in range(7)],
 		"recent": _procedure_rows({"docstatus": 1}, limit=5),
+		"appointments": [a for a in appointments() if a["state"] == "waiting"][:6],
+		"consultations": consultations(limit=5),
+		"requested": len(treatments_requested()),
 		"top_templates": frappe.db.sql(
 			"""select procedure_template as name, count(*) as n from `tabClinical Procedure`
 			where docstatus = 1 and status = 'Completed' and start_date >= %s group by procedure_template order by n desc limit 4""",

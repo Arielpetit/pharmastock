@@ -26,7 +26,7 @@ export function setLanguage(code) {
 }
 
 // ERPNext's own names that read badly in English
-const en = { Nos: 'units' }
+const en = { Nos: 'units', 'Used in a procedure': 'Used in a treatment' }
 
 /** Translate, then fill {0}, {1}… with the extra arguments. */
 export function t(text, ...args) {

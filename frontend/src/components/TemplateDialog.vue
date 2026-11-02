@@ -1,5 +1,5 @@
 <template>
-  <Sheet v-model:open="ui.template.open" :title="editing ? t('Edit procedure type') : t('New procedure type')"
+  <Sheet v-model:open="ui.template.open" :title="editing ? t('Edit treatment type') : t('New treatment type')"
     :message="t('A care you give often, like a wound dressing or an injection, and the medicines it uses each time.')"
     icon="lucide-stethoscope" theme="green" size="xl">
     <form class="space-y-4" @submit.prevent="save">
@@ -52,7 +52,7 @@ watch(() => ui.template.open, async (open) => {
 
 async function save() {
   error.value = ''
-  if (!form.template.trim()) return (error.value = t('Please enter the name of the procedure.'))
+  if (!form.template.trim()) return (error.value = t('Please enter the name of the treatment type.'))
   const items = form.items.filter((r) => r.medicine)
   if (items.some((r) => !(Number(r.qty) > 0))) return (error.value = t('Please enter a quantity above 0.'))
   saving.value = true
@@ -60,7 +60,7 @@ async function save() {
     await post(H('save_procedure_template'), { name: ui.template.name || undefined, template: form.template, description: form.description,
       disabled: form.disabled ? 1 : 0, items: items.map((r) => ({ medicine: r.medicine, qty: Number(r.qty) })) })
     ui.template.open = false
-    toast.success(editing.value ? t('Procedure type updated') : t('Procedure type created'), { description: form.template })
+    toast.success(editing.value ? t('Treatment type updated') : t('Treatment type created'), { description: form.template })
     changed()
   } catch (e) {
     error.value = e.message

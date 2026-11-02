@@ -1,9 +1,9 @@
 <template>
   <div>
-    <PageHeader :eyebrow="t('Care')" :title="t('Procedures')" :subtitle="t('Care given to patients, and the medicines each one uses.')">
+    <PageHeader :eyebrow="t('Care')" :title="t('Treatments')" :subtitle="t('Care given to patients, and the medicines each one uses.')">
       <template #actions>
-        <Btn icon="lucide-list-plus" :label="t('New procedure type')" @click="openTemplate()" />
-        <Btn variant="primary" icon="lucide-stethoscope" :label="t('Record a procedure')" @click="openProcedure()" />
+        <Btn icon="lucide-list-plus" :label="t('New treatment type')" @click="openTemplate()" />
+        <Btn variant="primary" icon="lucide-stethoscope" :label="t('Record a treatment')" @click="openProcedure()" />
       </template>
     </PageHeader>
 
@@ -25,8 +25,8 @@
       </div>
       <div v-if="!rows" class="space-y-2.5"><div v-for="i in 4" :key="i" class="surface h-28 animate-pulse" /></div>
       <div v-else-if="!shown.length" class="surface">
-        <EmptyState icon="lucide-stethoscope" :title="t('No procedures here')" :text="t('Record the care you give, and the medicines used leave the stock.')">
-          <Btn variant="primary" icon="lucide-plus" :label="t('Record a procedure')" @click="openProcedure()" />
+        <EmptyState icon="lucide-stethoscope" :title="t('No treatments here')" :text="t('Record the care you give, and the medicines used leave the stock.')">
+          <Btn variant="primary" icon="lucide-plus" :label="t('Record a treatment')" @click="openProcedure()" />
         </EmptyState>
       </div>
       <template v-else>
@@ -41,16 +41,16 @@
     <template v-else>
       <div v-if="!templates" class="grid gap-2.5 md:grid-cols-2"><div v-for="i in 4" :key="i" class="surface h-36 animate-pulse" /></div>
       <div v-else-if="!templates.length" class="surface">
-        <EmptyState icon="lucide-list-plus" :title="t('No procedure types yet')"
+        <EmptyState icon="lucide-list-plus" :title="t('No treatment types yet')"
           :text="t('First create the cares you give, like a wound dressing, with the medicines they use.')">
-          <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="openTemplate()" />
+          <Btn variant="primary" icon="lucide-plus" :label="t('New treatment type')" @click="openTemplate()" />
         </EmptyState>
       </div>
       <template v-else>
       <div v-if="!activeTemplates.length" class="surface mb-3">
-        <EmptyState icon="lucide-list-plus" :title="t('No active procedure type')"
-          :text="t('All your procedure types are hidden. Create a new one, or show a hidden one again below.')">
-          <Btn variant="primary" icon="lucide-plus" :label="t('New procedure type')" @click="openTemplate()" />
+        <EmptyState icon="lucide-list-plus" :title="t('No active treatment type')"
+          :text="t('All your treatment types are hidden. Create a new one, or show a hidden one again below.')">
+          <Btn variant="primary" icon="lucide-plus" :label="t('New treatment type')" @click="openTemplate()" />
         </EmptyState>
       </div>
       <div class="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
@@ -106,7 +106,7 @@ const route = useRoute()
 const router = useRouter()
 const tabs = [
   { value: 'records', label: 'Recorded', icon: 'lucide-stethoscope' },
-  { value: 'types', label: 'Procedure types', icon: 'lucide-list-checks' },
+  { value: 'types', label: 'Treatment types', icon: 'lucide-list-checks' },
 ]
 const states = [
   { value: 'all', label: 'All' },
@@ -131,7 +131,7 @@ async function reactivate(tp) {
   try {
     await post(H('save_procedure_template'), { name: tp.name, template: tp.template, description: tp.description, disabled: 0,
       items: tp.items.map((i) => ({ medicine: i.medicine, qty: i.qty })) })
-    toast.success(t('Procedure type shown again'), { description: tp.template })
+    toast.success(t('Treatment type shown again'), { description: tp.template })
     changed()
   } catch (e) {
     toast.error(e.message)

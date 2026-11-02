@@ -158,6 +158,7 @@
       <TemplateDialog />
       <ProcedureDialog />
       <CancelProcedureDialog />
+      <AppointmentDialog />
     </template>
   </div>
 </template>
@@ -177,6 +178,7 @@ import PatientDialog from './PatientDialog.vue'
 import TemplateDialog from './TemplateDialog.vue'
 import ProcedureDialog from './ProcedureDialog.vue'
 import CancelProcedureDialog from './CancelProcedureDialog.vue'
+import AppointmentDialog from './AppointmentDialog.vue'
 import { net } from '@/api'
 import { alerts, alertCount, loadAlerts } from '@/alerts'
 import { lang, setLanguage, t } from '@/i18n'
@@ -208,8 +210,9 @@ const sections = computed(() => [
     { to: '/reports', label: 'Reports', icon: 'lucide-chart-no-axes-column' },
   ] },
   ...(session.health ? [{ label: 'Care', items: [
+    { to: '/consultations', label: 'Consultations', icon: 'lucide-notebook-pen' },
     { to: '/patients', label: 'Patients', icon: 'lucide-users-round' },
-    { to: '/procedures', label: 'Procedures', icon: 'lucide-stethoscope' },
+    { to: '/procedures', label: 'Treatments', icon: 'lucide-stethoscope' },
   ] }] : []),
   ...(session.isAdmin ? [{ label: 'Team', items: [{ to: '/staff', label: 'Staff', icon: 'lucide-id-card' }] }] : []),
 ])
@@ -220,7 +223,7 @@ const mobileNav = computed(() => [
   { to: '/medicines', short: 'Medicines', icon: 'lucide-pill' },
   { to: '/give-out', short: 'Give out', icon: 'lucide-hand-heart', primary: true },
   ...(session.health
-    ? [{ to: '/patients', short: 'Patients', icon: 'lucide-users-round' }, { to: '/procedures', short: 'Care', icon: 'lucide-stethoscope' }]
+    ? [{ to: '/patients', short: 'Patients', icon: 'lucide-users-round' }, { to: '/consultations', short: 'Consult', icon: 'lucide-notebook-pen' }]
     : [{ to: '/requests', short: 'Requests', icon: 'lucide-clipboard-list', badge: pending.value }, { to: '/reports', short: 'Reports', icon: 'lucide-chart-no-axes-column' }]),
 ])
 
@@ -230,6 +233,7 @@ const userMenu = computed(() => [
   { label: t('My account'), icon: 'lucide-user-round', route: { name: 'account' } },
   { label: t('Notifications'), icon: 'lucide-bell', route: { name: 'notifications' } },
   ...(session.health ? [
+    { label: t('Treatments'), icon: 'lucide-stethoscope', route: { name: 'procedures' } },
     { label: pending.value ? `${t('Medical requests')} (${pending.value})` : t('Medical requests'), icon: 'lucide-clipboard-list', route: { name: 'requests' } },
     { label: t('Reports'), icon: 'lucide-chart-no-axes-column', route: { name: 'reports' } },
   ] : []),

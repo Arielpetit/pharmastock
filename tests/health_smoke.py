@@ -6,6 +6,7 @@ Creates "ZZ Health Test <random>" medicine, a patient, a procedure template and 
 import http.cookiejar, json, os, sys, urllib.error, urllib.parse, urllib.request, uuid
 
 BASE, S_USER, S_PW = sys.argv[1:4]
+A_USER, A_PW = (sys.argv[4:6] + [None, None])[:2]
 
 
 class Client:
@@ -135,5 +136,59 @@ check("done filter leaves it out, cancelled filter has it",
 planned2 = staff.post("health.record_procedure", {"patient": p["name"], "template": tpl["name"], "complete": 0})
 staff.post("health.cancel_procedure", {"name": planned2["name"]})
 check("planned procedure cancelled without a reason, stock unchanged", stock() == 35)
+
+# ---- doctors, appointments, consultations
+check("the user has a doctor profile and the lists are offered", boot["practitioner"] and "BID" in boot["options"]["dosages"])
+docs = staff.get("health.practitioners")
+me = [d for d in docs if d["me"]]
+check("the logged-in user is in the list of doctors", len(me) == 1)
+if A_USER:
+	admin = Client(A_USER, A_PW)
+	email = f"doc.{tag}@healthcenter.local"
+	admin.post("save_staff", {"email": email, "full_name": f"Doctor {tag}", "role": "Pharmacy Staff", "password": "Tmp-Passw0rd!x9"})
+	check("creating a staff user also creates the doctor", any(d["user_id"] == email for d in staff.get("health.practitioners")))
+	admin.post("save_staff", {"email": email, "full_name": f"Doctor {tag}", "role": "Pharmacy Staff", "enabled": 0})
+	check("disabling the user disables the doctor", not any(d["user_id"] == email for d in staff.get("health.practitioners")))
+
+import datetime
+today = datetime.date.today().isoformat()
+slot = f"{(int(uuid.uuid4().hex[:2], 16) % 8) + 12}:{['00','20','40'][int(uuid.uuid4().hex[2], 16) % 3]}"
+ap = staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": today, "time": slot, "duration": 20})
+check("appointment booked and listed for today", any(a["name"] == ap["name"] and a["state"] == "waiting" for a in staff.get("health.appointments", {"date": today})))
+fails("cannot book in the past", lambda: staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": "2020-01-01", "time": "10:00"}), "later day")
+ap2 = staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": today, "time": "23:00"})
+staff.post("health.cancel_appointment", {"name": ap2["name"]})
+check("appointment cancelled", [a for a in staff.get("health.appointments", {"date": today}) if a["name"] == ap2["name"]][0]["state"] == "cancelled")
+
+data = {"patient": p["name"], "appointment": ap["name"], "symptoms": ["Fever", f"Cough {tag}"], "diagnoses": ["Malaria"], "notes": "Fever for 3 days",
+		"vitals": {"temperature": "38.6", "pulse": "92", "bp_systolic": "120", "bp_diastolic": "80", "weight": "61"},
+		"prescriptions": [{"medicine": med, "dosage": "BID", "period": "1 Week", "comment": "after meals"}], "treatments": [tpl["name"]]}
+c = staff.post("health.save_consultation", data)
+check("consultation saved as a draft", c["status"] == "draft")
+d = staff.get("health.consultation", {"name": c["name"]})
+check("draft holds symptoms, diagnosis, vitals, prescription, treatment",
+	  d["symptoms"] == ["Fever", f"Cough {tag}"] and d["diagnoses"] == ["Malaria"] and d["vitals"]["temperature"] == "38.6"
+	  and len(d["prescriptions"]) == 1 and d["treatments"][0]["template"] == tpl["name"] and d["state"] == "draft")
+data["notes"] = "Fever for 3 days, no vomiting"
+staff.post("health.save_consultation", {**data, "name": c["name"]})
+check("a draft can be edited", staff.get("health.consultation", {"name": c["name"]})["encounter_comment"].endswith("no vomiting"))
+check("no orders exist before finishing", not staff.get("health.prescriptions", {"patient": p["name"]}) and not staff.get("health.treatments_requested", {"patient": p["name"]}))
+staff.post("health.save_consultation", {**data, "name": c["name"], "finish": 1})
+d = staff.get("health.consultation", {"name": c["name"]})
+check("finishing locks it and creates the prescription", d["state"] == "done" and d["prescriptions"][0]["quantity"] == 14)
+fails("a finished consultation cannot be changed", lambda: staff.post("health.save_consultation", {**data, "name": c["name"]}), "cannot be changed")
+check("the prescription is listed for the patient and does not move stock", len(staff.get("health.prescriptions", {"patient": p["name"]})) == 1 and stock() == 35)
+asked = staff.get("health.treatments_requested", {"patient": p["name"]})
+check("the treatment the doctor asked for is waiting to be recorded", len(asked) == 1 and asked[0]["template"] == tpl["name"])
+check("the appointment is closed by the consultation", [a for a in staff.get("health.appointments", {"date": today}) if a["name"] == ap["name"]][0]["state"] == "done")
+rec = staff.post("health.record_procedure", {"patient": p["name"], "template": tpl["name"], "complete": 1, "service_request": asked[0]["name"]})
+check("recording it takes the stock out (35 - 3 = 32) and clears the request", stock() == 32 and not staff.get("health.treatments_requested", {"patient": p["name"]}))
+detail = staff.get("health.patient", {"name": p["name"]})
+check("patient file gathers consultations, appointments, prescriptions, vitals",
+	  len(detail["consultations"]) == 1 and len(detail["appointments"]) >= 1 and len(detail["prescriptions"]) == 1 and len(detail["vitals"]) == 1)
+fails("cannot finish an empty consultation", lambda: staff.post("health.save_consultation", {"patient": p["name"], "finish": 1}), "observation")
+d2 = staff.post("health.save_consultation", {"patient": p["name"], "notes": "walk-in"})
+staff.post("health.discard_consultation", {"name": d2["name"]})
+check("a draft can be discarded", d2["name"] not in [x["name"] for x in staff.get("health.consultations", {"patient": p["name"]})])
 
 print(f"\n{ok} checks passed")

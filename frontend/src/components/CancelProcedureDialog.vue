@@ -1,5 +1,5 @@
 <template>
-  <Sheet v-model:open="ui.cancelProc.open" :title="completed ? t('Cancel this procedure?') : t('Cancel this planned procedure?')"
+  <Sheet v-model:open="ui.cancelProc.open" :title="completed ? t('Cancel this treatment?') : t('Cancel this planned treatment?')"
     :message="completed ? t('The medicines go back into the same batches. The record stays in the history, marked as cancelled.')
       : t('Nothing leaves the stock. It stays in the patient’s file as cancelled.')"
     icon="lucide-undo-2" theme="red" size="lg">
@@ -22,7 +22,7 @@
     </div>
     <template #actions>
       <Btn variant="ghost" :label="t('Keep it')" @click="ui.cancelProc.open = false" />
-      <Btn variant="danger" icon="lucide-undo-2" :label="t('Cancel procedure')" :loading="saving" @click="save" />
+      <Btn variant="danger" icon="lucide-undo-2" :label="t('Cancel treatment')" :loading="saving" @click="save" />
     </template>
   </Sheet>
 </template>
@@ -60,7 +60,7 @@ async function save() {
   try {
     const res = await post(H('cancel_procedure'), { name: p.value.name, reason: reason.value })
     ui.cancelProc.open = false
-    toast.success(t('Procedure cancelled'), { description: res.stock_returned ? t('The medicines are back in stock.') : '' })
+    toast.success(t('Treatment cancelled'), { description: res.stock_returned ? t('The medicines are back in stock.') : '' })
     changed()
   } catch (e) {
     error.value = e.message

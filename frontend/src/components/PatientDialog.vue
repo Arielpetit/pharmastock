@@ -1,6 +1,6 @@
 <template>
   <Sheet v-model:open="ui.patient.open" :title="editing ? t('Edit patient') : t('New patient')"
-    :message="editing ? '' : t('The patient is registered in the health records, so every procedure is kept in their file.')"
+    :message="editing ? '' : t('The patient is registered in the health records, so every treatment is kept in their file.')"
     icon="lucide-user-round-plus" theme="green" size="xl">
     <form class="grid grid-cols-2 items-start gap-x-3 gap-y-4 sm:gap-x-4" @submit.prevent="save">
       <FormControl variant="outline" v-model="form.first_name" :label="t('First name')" required size="lg" :placeholder="t('e.g. Awa')" />

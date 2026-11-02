@@ -165,8 +165,11 @@ def boot():
 			"urgencies": list(URGENCY_DAYS),
 			"genders": health.GENDERS,
 			"blood_groups": health.BLOOD_GROUPS,
+			"dosages": health.DOSAGES,
+			"durations": health.DURATIONS,
 		},
 		"health": health.has_health(),
+		"practitioner": health._my_practitioner() if health.has_health() else None,
 	}
 
 
@@ -758,6 +761,7 @@ def save_staff(email, full_name, role="Pharmacy Staff", password=None, enabled=1
 	user.flags.ignore_permissions = True
 	user.flags.ignore_password_policy = False
 	user.save()
+	health.sync_practitioner(user.name)  # every pharmacy user is also a doctor profile in Frappe Health
 	return {"name": user.name}
 
 

@@ -10,7 +10,8 @@ export const session = reactive({
   currency: 'XAF',
   siteName: '',
   health: false,
-  options: { categories: [], forms: [], units: [], reasons: [], urgencies: [], genders: [], blood_groups: [] },
+  practitioner: null,
+  options: { categories: [], forms: [], units: [], reasons: [], urgencies: [], genders: [], blood_groups: [], dosages: [], durations: [] },
 })
 
 export async function loadSession() {
@@ -25,6 +26,7 @@ export async function loadSession() {
         siteName: boot.site_name,
         options: boot.options,
         health: !!boot.health,
+        practitioner: boot.practitioner || null,
       })
       net.csrf = boot.csrf_token
       if (!localStorage.getItem('pharmastock.lang') && boot.user.language) setLanguage(boot.user.language)

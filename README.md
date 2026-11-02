@@ -50,6 +50,15 @@ PWA (Vue 3 + frappe-ui)  →  pharmastock.api (Python, in the site)  →  ERPNex
   on `bench migrate`.
 - **Patients**: registered from the app (`/pharmacy/patients`) as Frappe Health Patients.
 - **Procedure types**: Clinical Procedure Templates with the medicines they use each time.
+- **Doctors**: every pharmacy user created in the app also gets a Healthcare Practitioner (and is kept in
+  step when disabled), so anyone can run a consultation. Existing users are covered on `bench migrate`.
+- **Appointments** (Patient Appointment) are booked from the app and closed by the consultation.
+- **Consultations** (Patient Encounter): symptoms, vital signs (Vital Signs), observations, diagnosis, a
+  prescription (finishing creates a Medication Request per medicine; it does not move stock) and treatments to
+  do (a Service Request each). A finished consultation is locked; a draft can be edited or discarded.
+- **Patient file**: timeline, consultations, treatments, prescriptions, vital signs and appointments of a patient.
+- **Treatments** (a Clinical Procedure): the app's name for a procedure. A treatment asked in a consultation is
+  recorded against its Service Request, which clears it from the "to record" list.
 - **Procedures**: a Clinical Procedure for a patient. *Done now* takes its medicines out of the
   Pharmacy store right away (valid batches, earliest expiry first; stock movement reason
   "Used in a procedure", linked to the procedure); *Planned* waits until it is marked as done.
@@ -104,10 +113,10 @@ python3 tests/api_smoke.py http://localhost:8088 <staff-email> <staff-pw> <admin
 # PWA install, offline use and sync, mobile and French; screenshots in docs/screenshots
 node tests/e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
 
-# Frappe Health: 26 checks — patient, procedure type, done/planned procedures, the stock they use, cancelling
-python3 tests/health_smoke.py http://localhost:8088 <staff-email> <staff-pw>
+# Frappe Health: 46 checks — patients, treatments and their stock, cancelling, doctors, appointments, consultations (pass admin credentials last to also test staff creation)
+python3 tests/health_smoke.py http://localhost:8088 <staff-email> <staff-pw> [<admin-email> <admin-pw>]
 
-# Care flow through the real UI (medicine → patient → procedure type → procedures → cancel → dashboard): 14 checks
+# Care flow through the real UI (medicine → patient → procedure type → procedures → cancel → appointment and consultation → dashboard): 19 checks
 node tests/care_e2e.mjs http://localhost:8088 <staff-email> <staff-pw> <admin-email> <admin-pw> docs/screenshots
 ```
 

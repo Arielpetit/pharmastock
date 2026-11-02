@@ -3,8 +3,8 @@
     <PageHeader :eyebrow="t('Stock out')" :title="t('Give out stock')" :subtitle="t('Record medicine that leaves the store without a patient: damaged, expired or adjusted.')">
       <template v-if="session.health" #meta>
         <p class="mt-2 flex items-center gap-1.5 text-[13px] text-ink-mute">
-          <span class="lucide-info size-3.5 shrink-0" /> {{ t('Medicine given to a patient is recorded as a procedure.') }}
-          <RouterLink to="/procedures" class="font-medium text-apo hover:underline">{{ t('Open procedures') }}</RouterLink>
+          <span class="lucide-info size-3.5 shrink-0" /> {{ t('Medicine given to a patient is recorded as a treatment.') }}
+          <RouterLink to="/procedures" class="font-medium text-apo hover:underline">{{ t('Open treatments') }}</RouterLink>
         </p>
       </template>
     </PageHeader>

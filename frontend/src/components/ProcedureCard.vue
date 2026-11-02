@@ -34,7 +34,7 @@
     </div>
     <div v-else-if="p.state === 'done'" class="mt-3 flex justify-end">
       <button class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12.5px] font-medium text-ink-mute transition hover:bg-alert-soft hover:text-alert"
-        @click="openCancelProcedure(p)"><span class="lucide-undo-2 size-3.5" /> {{ t('Cancel procedure') }}</button>
+        @click="openCancelProcedure(p)"><span class="lucide-undo-2 size-3.5" /> {{ t('Cancel treatment') }}</button>
     </div>
   </article>
 </template>
@@ -55,14 +55,14 @@ const busy = ref(false)
 
 function complete() {
   dialog.confirm({
-    title: t('Mark this procedure as done?'),
+    title: t('Mark this treatment as done?'),
     message: props.p.items.length ? t('These medicines leave the stock: {0}', usedLine(props.p.items)) : props.p.procedure_template,
     confirmLabel: t('Mark as done'),
     onConfirm: async () => {
       busy.value = true
       try {
         await post(H('complete_procedure'), { name: props.p.name })
-        toast.success(t('Procedure recorded'))
+        toast.success(t('Treatment recorded'))
         changed()
       } catch (e) {
         toast.error(e.message)

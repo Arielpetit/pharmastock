@@ -2,7 +2,7 @@
   <div>
     <PageHeader :eyebrow="t('Care')" :title="t('Patients')" :subtitle="rows ? t('{0} patients registered', rows.length) : ''">
       <template #actions>
-        <Btn icon="lucide-stethoscope" :label="t('Record a procedure')" @click="openProcedure()" />
+        <Btn icon="lucide-stethoscope" :label="t('Record a treatment')" @click="openProcedure()" />
         <Btn variant="primary" icon="lucide-user-round-plus" :label="t('New patient')" @click="openPatient()" />
       </template>
     </PageHeader>
@@ -28,7 +28,7 @@
             <tr class="border-b border-line text-[12px] text-ink-mute">
               <th class="py-3.5 pl-6 pr-3 font-medium">{{ t('Patient') }}</th>
               <th class="px-3 py-3.5 font-medium">{{ t('Phone') }}</th>
-              <th class="px-3 py-3.5 font-medium">{{ t('Procedures') }}</th>
+              <th class="px-3 py-3.5 font-medium">{{ t('Treatments') }}</th>
               <th class="px-3 py-3.5 font-medium">{{ t('Last visit') }}</th>
               <th class="w-px py-3.5 pl-1 pr-6" />
             </tr>
@@ -48,7 +48,7 @@
               <td class="px-3 py-3.5"><span class="font-display text-[20px] text-ink tabular">{{ p.procedures }}</span></td>
               <td class="px-3 py-3.5 text-[13.5px] text-ink-soft">{{ p.last_visit ? date(p.last_visit) : '—' }}</td>
               <td class="py-3.5 pl-1 pr-6">
-                <Btn size="sm" icon="lucide-plus" :label="t('Procedure')" @click.stop="openProcedure(p.name)" />
+                <Btn size="sm" icon="lucide-plus" :label="t('Treatment')" @click.stop="openProcedure(p.name)" />
               </td>
             </tr>
           </tbody>
@@ -67,9 +67,9 @@
           </div>
           <div class="mt-3.5 flex items-center justify-between gap-3 border-t border-line/70 pt-3">
             <span class="truncate text-[12px] text-ink-mute">
-              {{ p.last_visit ? t('Last visit {0}', date(p.last_visit)) : t('No procedure yet') }}
+              {{ p.last_visit ? t('Last visit {0}', date(p.last_visit)) : t('No treatment yet') }}
             </span>
-            <Btn size="sm" icon="lucide-plus" :label="t('Procedure')" @click.stop="openProcedure(p.name)" />
+            <Btn size="sm" icon="lucide-plus" :label="t('Treatment')" @click.stop="openProcedure(p.name)" />
           </div>
         </li>
       </ul>

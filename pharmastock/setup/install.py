@@ -83,7 +83,7 @@ def after_migrate():
 
 def setup_health():
 	"""Link the pharmacy to Frappe Health: custom fields, and a Medication for every medicine."""
-	from pharmastock.health import has_health, sync_all_medications
+	from pharmastock.health import ensure_appointment_type, has_health, sync_all_medications, sync_all_practitioners
 
 	if not has_health():
 		return
@@ -92,6 +92,8 @@ def setup_health():
 		_insert_if_missing("Item Group", "Clinical Procedures", item_group_name="Clinical Procedures",
 						   parent_item_group="All Item Groups", is_group=0)
 		sync_all_medications()
+		ensure_appointment_type()
+		sync_all_practitioners()
 
 
 def erpnext_ready():
