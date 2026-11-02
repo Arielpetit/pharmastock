@@ -679,4 +679,5 @@ export default {
   "Appointments of the day": "Rendez-vous du jour",
   "People who can use the app. Each one is also a doctor, so they can run consultations.": "Les personnes qui peuvent utiliser l’application. Chacune est aussi médecin : elle peut faire des consultations.",
   "Finish": "Terminer",
+  "Open a patient and start a consultation.": "Ouvrez un patient et commencez une consultation.",
 }

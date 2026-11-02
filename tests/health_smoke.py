@@ -137,7 +137,7 @@ planned2 = staff.post("health.record_procedure", {"patient": p["name"], "templat
 staff.post("health.cancel_procedure", {"name": planned2["name"]})
 check("planned procedure cancelled without a reason, stock unchanged", stock() == 35)
 
-# ---- doctors, appointments, consultations
+# ---- doctors and consultations
 check("the user has a doctor profile and the lists are offered", boot["practitioner"] and "BID" in boot["options"]["dosages"])
 docs = staff.get("health.practitioners")
 me = [d for d in docs if d["me"]]
@@ -150,17 +150,7 @@ if A_USER:
 	admin.post("save_staff", {"email": email, "full_name": f"Doctor {tag}", "role": "Pharmacy Staff", "enabled": 0})
 	check("disabling the user disables the doctor", not any(d["user_id"] == email for d in staff.get("health.practitioners")))
 
-import datetime
-today = datetime.date.today().isoformat()
-slot = f"{(int(uuid.uuid4().hex[:2], 16) % 8) + 12}:{['00','20','40'][int(uuid.uuid4().hex[2], 16) % 3]}"
-ap = staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": today, "time": slot, "duration": 20})
-check("appointment booked and listed for today", any(a["name"] == ap["name"] and a["state"] == "waiting" for a in staff.get("health.appointments", {"date": today})))
-fails("cannot book in the past", lambda: staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": "2020-01-01", "time": "10:00"}), "later day")
-ap2 = staff.post("health.save_appointment", {"patient": p["name"], "practitioner": me[0]["name"], "date": today, "time": "23:00"})
-staff.post("health.cancel_appointment", {"name": ap2["name"]})
-check("appointment cancelled", [a for a in staff.get("health.appointments", {"date": today}) if a["name"] == ap2["name"]][0]["state"] == "cancelled")
-
-data = {"patient": p["name"], "appointment": ap["name"], "symptoms": ["Fever", f"Cough {tag}"], "diagnoses": ["Malaria"], "notes": "Fever for 3 days",
+data = {"patient": p["name"], "symptoms": ["Fever", f"Cough {tag}"], "diagnoses": ["Malaria"], "notes": "Fever for 3 days",
 		"vitals": {"temperature": "38.6", "pulse": "92", "bp_systolic": "120", "bp_diastolic": "80", "weight": "61"},
 		"prescriptions": [{"medicine": med, "dosage": "BID", "period": "1 Week", "comment": "after meals"}], "treatments": [tpl["name"]]}
 c = staff.post("health.save_consultation", data)
@@ -180,12 +170,11 @@ fails("a finished consultation cannot be changed", lambda: staff.post("health.sa
 check("the prescription is listed for the patient and does not move stock", len(staff.get("health.prescriptions", {"patient": p["name"]})) == 1 and stock() == 35)
 asked = staff.get("health.treatments_requested", {"patient": p["name"]})
 check("the treatment the doctor asked for is waiting to be recorded", len(asked) == 1 and asked[0]["template"] == tpl["name"])
-check("the appointment is closed by the consultation", [a for a in staff.get("health.appointments", {"date": today}) if a["name"] == ap["name"]][0]["state"] == "done")
 rec = staff.post("health.record_procedure", {"patient": p["name"], "template": tpl["name"], "complete": 1, "service_request": asked[0]["name"]})
 check("recording it takes the stock out (35 - 3 = 32) and clears the request", stock() == 32 and not staff.get("health.treatments_requested", {"patient": p["name"]}))
 detail = staff.get("health.patient", {"name": p["name"]})
-check("patient file gathers consultations, appointments, prescriptions, vitals",
-	  len(detail["consultations"]) == 1 and len(detail["appointments"]) >= 1 and len(detail["prescriptions"]) == 1 and len(detail["vitals"]) == 1)
+check("patient file gathers consultations, prescriptions, vitals",
+	  len(detail["consultations"]) == 1 and len(detail["prescriptions"]) == 1 and len(detail["vitals"]) == 1)
 fails("cannot finish an empty consultation", lambda: staff.post("health.save_consultation", {"patient": p["name"], "finish": 1}), "observation")
 d2 = staff.post("health.save_consultation", {"patient": p["name"], "notes": "walk-in"})
 staff.post("health.discard_consultation", {"name": d2["name"]})

@@ -2,15 +2,12 @@
   <div class="pb-24 md:pb-8">
     <div v-if="loading" class="space-y-4"><div class="h-24 animate-pulse rounded-[18px] bg-paper-deep" /><div class="surface h-72 animate-pulse" /></div>
     <template v-else>
-      <PageHeader :title="isNew ? t('New consultation') : d.patient_name" back="/consultations" :back-label="t('Consultations')">
+      <PageHeader :title="isNew ? t('New consultation') : d.patient_name" :back="backTo" :back-label="backLabel">
         <template #meta>
           <div v-if="!isNew" class="mt-3 flex flex-wrap items-center gap-2">
             <StatusBadge :status="d.state" />
             <span class="text-[13px] text-ink-mute">{{ date(d.encounter_date) }} · {{ d.time }} · {{ d.practitioner_name }}</span>
           </div>
-          <p v-else-if="appointmentNote" class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-[12.5px] font-medium text-info">
-            <span class="lucide-calendar-check size-3.5" /> {{ appointmentNote }}
-          </p>
         </template>
         <template v-if="!isNew" #actions>
           <Btn icon="lucide-user-round" :label="t('Patient file')" :to="{ name: 'patient', params: { name: d.patient } }" />
@@ -193,11 +190,12 @@ const VITAL_FIELDS = [
   { key: 'height', label: 'Height', unit: 'cm', hint: '' },
 ]
 const blankVitals = () => Object.fromEntries(VITAL_FIELDS.map((v) => [v.key, '']))
-const form = reactive({ patient: null, practitioner: null, appointment: null, date: null, symptoms: [], diagnoses: [], notes: '', vitals: blankVitals(), prescriptions: [], treatments: [] })
+const form = reactive({ patient: null, practitioner: null, date: null, symptoms: [], diagnoses: [], notes: '', vitals: blankVitals(), prescriptions: [], treatments: [] })
 
 const readonly = computed(() => !isNew.value && d.value?.state === 'done')
 const lockedPatient = computed(() => !!(form.patient && (!isNew.value || route.query.patient)))
-const appointmentNote = computed(() => (route.query.appointment ? t('From the appointment of {0}', lockedName.value) : ''))
+const backTo = computed(() => { const p = form.patient || route.query.patient; return p ? { name: 'patient', params: { name: p } } : '/patients' })
+const backLabel = computed(() => lockedName.value || t('Patients'))
 const newRx = () => ({ key: `rx${Date.now()}${seq++}`, medicine: null, dosage: 'Once Daily', period: '1 Week', comment: '', stock: null })
 const addRx = () => form.prescriptions.push(newRx())
 const toggleTreatment = (n) => (form.treatments = form.treatments.includes(n) ? form.treatments.filter((x) => x !== n) : [...form.treatments, n])
@@ -225,13 +223,13 @@ async function load() {
   try {
     await loadLists()
     if (isNew.value) {
-      Object.assign(form, { patient: route.query.patient || null, appointment: route.query.appointment || null, practitioner: session.practitioner, symptoms: [], diagnoses: [], notes: '',
+      Object.assign(form, { patient: route.query.patient || null, practitioner: session.practitioner, symptoms: [], diagnoses: [], notes: '',
         vitals: blankVitals(), prescriptions: [], treatments: [] })
       if (form.patient) lockedName.value = (await get(H('patient'), { name: form.patient })).patient_name
     } else {
       d.value = await get(H('consultation'), { name: props.name })
       lockedName.value = d.value.patient_name
-      Object.assign(form, { patient: d.value.patient, appointment: d.value.appointment, practitioner: d.value.practitioner, date: d.value.encounter_date,
+      Object.assign(form, { patient: d.value.patient, practitioner: d.value.practitioner, date: d.value.encounter_date,
         symptoms: [...d.value.symptoms], diagnoses: [...d.value.diagnoses], notes: d.value.encounter_comment || '',
         vitals: { ...blankVitals(), ...Object.fromEntries(VITAL_FIELDS.map((v) => [v.key, d.value.vitals?.[v.key] ?? ''])) },
         prescriptions: d.value.prescriptions.map((p) => ({ key: `rx${seq++}`, medicine: p.medicine, dosage: p.dosage, period: p.period, comment: p.comment || '', stock: null })),
@@ -239,7 +237,7 @@ async function load() {
     }
   } catch (e) {
     toast.error(e.message)
-    router.replace({ name: 'consultations' })
+    router.replace({ name: 'patients' })
   } finally {
     loading.value = false
   }
@@ -253,7 +251,7 @@ async function save(finish) {
   saving.value = finish ? 'finish' : 'draft'
   try {
     const res = await post(H('save_consultation'), {
-      name: isNew.value ? undefined : props.name, patient: form.patient, appointment: form.appointment || undefined, practitioner: form.practitioner,
+      name: isNew.value ? undefined : props.name, patient: form.patient, practitioner: form.practitioner,
       symptoms: form.symptoms, diagnoses: form.diagnoses, notes: form.notes, vitals: form.vitals,
       prescriptions: rx.map((r) => ({ medicine: r.medicine, dosage: r.dosage, period: r.period, comment: r.comment })), treatments: form.treatments, finish: finish ? 1 : 0,
     })
@@ -276,7 +274,7 @@ function discard() {
       try {
         await post(H('discard_consultation'), { name: props.name })
         toast.success(t('Draft discarded'))
-        router.replace({ name: 'consultations', query: { tab: 'history' } })
+        router.replace({ name: 'patient', params: { name: form.patient } })
       } catch (e) {
         toast.error(e.message)
       }

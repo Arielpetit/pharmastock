@@ -9,7 +9,7 @@ const routes = [
   { path: '/give-out', name: 'give-out', component: () => import('./pages/GiveOut.vue') },
   { path: '/patients', name: 'patients', component: () => import('./pages/Patients.vue'), meta: { health: true } },
   { path: '/patients/:name', name: 'patient', component: () => import('./pages/Patient.vue'), props: true, meta: { health: true } },
-  { path: '/consultations', name: 'consultations', component: () => import('./pages/Consultations.vue'), meta: { health: true } },
+  { path: '/consultations', redirect: '/patients' },
   { path: '/consultations/:name', name: 'consultation', component: () => import('./pages/Consultation.vue'), props: true, meta: { health: true } },
   { path: '/procedures', name: 'procedures', component: () => import('./pages/Procedures.vue'), meta: { health: true } },
   { path: '/requests', name: 'requests', component: () => import('./pages/Requests.vue') },

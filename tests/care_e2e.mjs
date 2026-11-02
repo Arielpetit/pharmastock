@@ -273,18 +273,11 @@ await check('6b. patient file shows it as cancelled with the reason', (await tex
 await check('6b. original movement stays, marked cancelled', med.movements.some((m) => m.cancelled && m.recipient === PAT))
 await shot(staff, 'care-12-cancelled')
 
-// 8. an appointment, then a consultation with symptoms, vitals, a prescription and a treatment asked
+// 8. a consultation, from the patient file, with symptoms, vitals, a prescription and a treatment asked
 await click(staff, 'Patients', 'a')
 await (await staff.waitForSelector(`::-p-xpath(//main//*[normalize-space(.)=${JSON.stringify(PAT)}])`, { visible: true })).click()
 await waitText(staff, 'Allergies')
-await click(staff, 'Book an appointment', 'button')
-await sleep(700)
-await fill(staff, 'Time', '16:20', 'dialog')
-await shot(staff, 'care-13-appointment')
-await click(staff, 'Book', '*[@role="dialog"]//button')
-await waitText(staff, 'Next appointment')
-await check('8. appointment booked and shown on the patient file', true)
-await click(staff, 'Start consultation', 'a')
+await click(staff, 'New consultation', 'a')
 await waitText(staff, 'What the doctor observed')
 const typeTag = async (label, text) => {
   const el = await field(staff, label)
@@ -329,9 +322,7 @@ const file = await text(staff)
 await check('8. the patient file shows the consultation, prescription and vital signs',
   file.includes('Consultation') && file.includes('Prescription') && file.includes('Vital signs') && file.includes('Malaria'))
 await shot(staff, 'care-16-patient-file')
-await click(staff, 'Consultations', 'a')
-await waitText(staff, 'Appointments of the day')
-await shot(staff, 'care-17-consultations')
+
 
 // 7. phone
 const phone = await newPage(390, 844)

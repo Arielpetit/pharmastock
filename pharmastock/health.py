@@ -191,7 +191,6 @@ def patient(name):
 	_patient_row(p)
 	p.procedures = procedures(patient=name)
 	p.consultations = consultations(patient=name)
-	p.appointments = appointments(patient=name)
 	p.prescriptions = prescriptions(patient=name)
 	p.treatments_requested = treatments_requested(patient=name)
 	p.vitals = _vitals_rows({"patient": name, "docstatus": 1})
@@ -506,69 +505,6 @@ def practitioners():
 	return rows
 
 
-# ------------------------------------------------------------------ appointments
-
-def _appt_state(status):
-	return "cancelled" if status == "Cancelled" else "done" if status in ("Closed", "Checked Out") else "waiting"
-
-
-@frappe.whitelist()
-def appointments(date=None, patient=None, status=None):
-	"""Appointments of one day (default today), or all of a patient's. status: waiting | done | cancelled."""
-	_require_staff()
-	_require_health()
-	filters = {}
-	if patient:
-		filters["patient"] = patient
-	else:
-		filters["appointment_date"] = getdate(date or nowdate())
-	rows = frappe.get_all("Patient Appointment", filters=filters,
-						  fields=["name", "patient", "patient_name", "practitioner", "practitioner_name", "appointment_date",
-								  "appointment_time", "duration", "status", "notes"],
-						  order_by="appointment_date desc, appointment_time asc" if patient else "appointment_time asc", limit=300)
-	for r in rows:
-		r.state = _appt_state(r.status)
-		r.time = str(r.appointment_time)[:5] if r.appointment_time else ""
-		r.consultation = frappe.db.get_value("Patient Encounter", {"appointment": r.name, "docstatus": ["<", 2]}, "name")
-		r.pop("appointment_time", None)
-	return [r for r in rows if not status or r.state == status]
-
-
-@frappe.whitelist(methods=["POST"])
-@_writes(admin=False)
-def save_appointment(patient, practitioner, date, time, duration=20, notes=None):
-	"""Book an appointment with a doctor."""
-	_require_health()
-	if not frappe.db.exists("Patient", patient):
-		frappe.throw(_("Please choose a patient"))
-	if not frappe.db.exists("Healthcare Practitioner", {"name": practitioner, "status": "Active"}):
-		frappe.throw(_("Please choose a doctor"))
-	if not date or getdate(date) < getdate():
-		frappe.throw(_("Please choose today or a later day"))
-	if not time:
-		frappe.throw(_("Please choose a time"))
-	doc = frappe.get_doc({
-		"doctype": "Patient Appointment", "owner": _owner(), "company": _company(), "patient": patient, "appointment_for": "Practitioner",
-		"practitioner": practitioner, "appointment_type": ensure_appointment_type(), "appointment_date": getdate(date),
-		"appointment_time": time if len(str(time)) > 5 else f"{time}:00", "duration": cint(duration) or 20, "notes": notes or "",
-	})
-	doc.insert(ignore_permissions=True)
-	_keep_owner(doc)
-	return {"name": doc.name}
-
-
-@frappe.whitelist(methods=["POST"])
-@_writes(admin=False)
-def cancel_appointment(name):
-	_require_health()
-	status = frappe.db.get_value("Patient Appointment", name, "status")
-	if status in ("Closed", "Checked Out"):
-		frappe.throw(_("This appointment is already finished"))
-	if status != "Cancelled":
-		frappe.db.set_value("Patient Appointment", name, "status", "Cancelled")
-	return {"name": name}
-
-
 # ------------------------------------------------------------------ consultations (Patient Encounter)
 
 def _named(doctype, field, names):
@@ -627,7 +563,7 @@ def _save_vitals(doc, vitals, finish):
 			vs.set(k, data.get(k))
 	else:
 		vs = frappe.get_doc({"doctype": "Vital Signs", "owner": _owner(), "patient": doc.patient, "encounter": doc.name,
-							 "appointment": doc.appointment or None, "signs_date": doc.encounter_date, "signs_time": doc.encounter_time,
+							 "signs_date": doc.encounter_date, "signs_time": doc.encounter_time,
 							 "naming_series": "HLC-VTS-.YYYY.-", "company": doc.company, **data})
 	vs.flags.ignore_permissions = True
 	vs.save()
@@ -637,12 +573,12 @@ def _save_vitals(doc, vitals, finish):
 
 @frappe.whitelist(methods=["POST"])
 @_writes(admin=False)
-def save_consultation(patient, name=None, appointment=None, practitioner=None, date=None, symptoms=None, diagnoses=None, notes=None,
+def save_consultation(patient, name=None, practitioner=None, date=None, symptoms=None, diagnoses=None, notes=None,
 					  vitals=None, prescriptions=None, treatments=None, finish=0):
 	"""Save a consultation as a draft, or finish it (the doctor's orders are then created).
 
 	Finishing creates a Prescription (Medication Request) per medicine and a requested Treatment (Service Request) per
-	treatment, and closes the appointment. A finished consultation cannot be edited.
+	treatment. A finished consultation cannot be edited.
 	"""
 	_require_health()
 	symptoms, diagnoses, prescriptions, treatments = [_loads(x) for x in (symptoms, diagnoses, prescriptions, treatments)]
@@ -652,8 +588,6 @@ def save_consultation(patient, name=None, appointment=None, practitioner=None, d
 	practitioner = practitioner or _my_practitioner()
 	if not practitioner or not frappe.db.exists("Healthcare Practitioner", {"name": practitioner, "status": "Active"}):
 		frappe.throw(_("Please choose the doctor for this consultation"))
-	if appointment and frappe.db.get_value("Patient Appointment", appointment, "patient") != patient:
-		frappe.throw(_("This appointment belongs to another patient"))
 	date = getdate(date or nowdate())
 	if date > getdate():
 		frappe.throw(_("The date cannot be in the future"))
@@ -664,7 +598,7 @@ def save_consultation(patient, name=None, appointment=None, practitioner=None, d
 		frappe.throw(_("Write at least one observation before finishing"))
 	fields = {
 		"patient": patient, "patient_name": frappe.db.get_value("Patient", patient, "patient_name"),
-		"practitioner": practitioner, "company": _company(), "appointment": appointment or None,
+		"practitioner": practitioner, "company": _company(),
 		"appointment_type": ensure_appointment_type(), "encounter_date": date, "encounter_comment": notes or "",
 	}
 	rows = {
@@ -736,7 +670,7 @@ def consultations(patient=None, limit=100):
 		filters["patient"] = patient
 	rows = frappe.get_all("Patient Encounter", filters=filters,
 						  fields=["name", "patient", "patient_name", "practitioner", "practitioner_name", "encounter_date", "encounter_time",
-								  "encounter_comment", "docstatus", "appointment"],
+								  "encounter_comment", "docstatus"],
 						  order_by="encounter_date desc, encounter_time desc", limit=cint(limit))
 	for r in rows:
 		r.time = str(r.encounter_time)[:5] if r.encounter_time else ""
@@ -763,7 +697,7 @@ def consultation(name):
 		frappe.throw(_("Consultation not found"), frappe.DoesNotExistError)
 	r = frappe.db.get_value("Patient Encounter", name,
 							["name", "patient", "patient_name", "practitioner", "practitioner_name", "encounter_date", "encounter_time",
-							 "encounter_comment", "docstatus", "appointment", "creation", "owner"], as_dict=True)
+							 "encounter_comment", "docstatus", "creation", "owner"], as_dict=True)
 	r.time = str(r.encounter_time)[:5] if r.encounter_time else ""
 	_consultation_row(r)
 	r.prescriptions = frappe.get_all("Drug Prescription", filters={"parent": name},
@@ -833,7 +767,6 @@ def care_summary():
 		"week": [{"date": str(frappe.utils.add_days(week, i)), "count": by_day.get(getdate(frappe.utils.add_days(week, i)), 0)}
 				 for i in range(7)],
 		"recent": _procedure_rows({"docstatus": 1}, limit=5),
-		"appointments": [a for a in appointments() if a["state"] == "waiting"][:6],
 		"consultations": consultations(limit=5),
 		"requested": len(treatments_requested()),
 		"top_templates": frappe.db.sql(

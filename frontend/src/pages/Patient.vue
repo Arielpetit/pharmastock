@@ -10,19 +10,13 @@
         </template>
         <template #actions>
           <Btn icon="lucide-pencil" :label="t('Edit')" @click="openPatient(p.name)" />
-          <Btn icon="lucide-calendar-plus" :label="t('Book an appointment')" @click="openAppointment(p.name)" />
           <Btn icon="lucide-stethoscope" :label="t('Record a treatment')" @click="openProcedure(p.name)" />
           <Btn variant="primary" icon="lucide-notebook-pen" :label="t('New consultation')" :to="{ name: 'consultation', params: { name: 'new' }, query: { patient: p.name } }" />
         </template>
       </PageHeader>
 
       <!-- care that was asked and is not done yet -->
-      <div v-if="p.treatments_requested.length || upcoming" class="mb-4 space-y-2">
-        <div v-if="upcoming" class="flex flex-wrap items-center gap-3 rounded-[16px] border border-info/20 bg-info-soft px-4 py-3 text-info">
-          <span class="lucide-calendar-clock size-5 shrink-0" />
-          <div class="min-w-0 flex-1 text-[13.5px]"><b>{{ t('Next appointment') }}</b> · {{ date(upcoming.appointment_date) }} {{ upcoming.time }} · {{ upcoming.practitioner_name }}</div>
-          <Btn size="sm" variant="brand" :label="t('Start consultation')" :to="{ name: 'consultation', params: { name: 'new' }, query: { patient: p.name, appointment: upcoming.name } }" />
-        </div>
+      <div v-if="p.treatments_requested.length" class="mb-4 space-y-2">
         <div v-for="r in p.treatments_requested" :key="r.name" class="flex flex-wrap items-center gap-3 rounded-[16px] border border-warn/20 bg-warn-soft px-4 py-3 text-warn">
           <span class="lucide-stethoscope size-5 shrink-0" />
           <div class="min-w-0 flex-1 text-[13.5px]"><b>{{ t('Treatment to record') }}</b> · {{ r.template }} · {{ date(r.order_date) }}</div>
@@ -100,16 +94,6 @@
             </table>
           </div>
 
-          <div v-else-if="tab === 'appointments'" class="surface overflow-hidden">
-            <EmptyState v-if="!p.appointments.length" icon="lucide-calendar" :title="t('No appointment')" />
-            <ul v-else>
-              <li v-for="a in p.appointments" :key="a.name" class="flex items-center gap-3.5 border-b border-line/70 px-5 py-3.5 last:border-0">
-                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-info-soft text-info"><span class="lucide-calendar-clock size-4" /></span>
-                <div class="min-w-0 flex-1"><div class="text-[14px] font-semibold text-ink">{{ date(a.appointment_date) }} · {{ a.time }}</div><div class="text-[12.5px] text-ink-mute">{{ a.practitioner_name }}<template v-if="a.notes"> · {{ a.notes }}</template></div></div>
-                <StatusBadge :status="a.state" />
-              </li>
-            </ul>
-          </div>
         </section>
 
         <aside class="order-1 space-y-3 lg:order-2">
@@ -147,19 +131,17 @@ import PageHeader from '@/components/PageHeader.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ProcedureCard from '@/components/ProcedureCard.vue'
 import ConsultationCard from '@/components/ConsultationCard.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
 import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, num } from '@/format'
 import { ageLabel, blood, dosageLabel, durationLabel, usedLine } from '@/care'
-import { ui, H, openAppointment, openPatient, openProcedure } from '@/ui'
+import { ui, H, openPatient, openProcedure } from '@/ui'
 
 const props = defineProps({ name: String })
 const router = useRouter()
 const p = ref(null)
 const tab = ref('timeline')
 const chips = computed(() => [p.value.sex && t(p.value.sex), ageLabel(p.value.age), blood(p.value.blood_group)].filter(Boolean))
-const upcoming = computed(() => (p.value?.appointments || []).filter((a) => a.state === 'waiting' && !a.consultation).sort((a, b) => (a.appointment_date + a.time).localeCompare(b.appointment_date + b.time))[0])
 const treatments = computed(() => p.value.procedures.filter((x) => x.state !== 'cancelled'))
 const tabs = computed(() => [
   { value: 'timeline', label: 'Timeline', count: null },
@@ -167,7 +149,6 @@ const tabs = computed(() => [
   { value: 'treatments', label: 'Treatments', count: treatments.value.length },
   { value: 'prescriptions', label: 'Prescriptions', count: p.value.prescriptions.length },
   { value: 'vitals', label: 'Vital signs', count: p.value.vitals.length },
-  { value: 'appointments', label: 'Appointments', count: p.value.appointments.length },
 ])
 const lastVitals = computed(() => {
   const v = p.value.vitals[0]
@@ -185,8 +166,6 @@ const timeline = computed(() => {
       sub: `${dosageLabel(r.dosage)} · ${durationLabel(r.period)} · ${num(r.quantity)}` })),
     ...x.vitals.map((v) => ({ key: `v${v.name}`, date: v.signs_date, icon: 'lucide-activity', tone: 'bg-warn-soft text-warn', title: t('Vital signs'),
       sub: [v.temperature && `${v.temperature} °C`, v.pulse && `${v.pulse}/min`, v.bp && `${v.bp} mmHg`, v.weight && `${v.weight} kg`].filter(Boolean).join(' · ') })),
-    ...x.appointments.filter((a) => a.state !== 'done').map((a) => ({ key: `a${a.name}`, date: a.appointment_date, icon: 'lucide-calendar-clock', tone: 'bg-paper-deep text-ink-soft', struck: a.state === 'cancelled',
-      title: `${t('Appointment')} · ${a.time}`, sub: `${a.practitioner_name}${a.state === 'cancelled' ? ' · ' + t('Cancelled') : ''}` })),
   ]
   return out.sort((a, b) => String(b.date).localeCompare(String(a.date)))
 })

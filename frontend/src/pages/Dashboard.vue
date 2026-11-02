@@ -32,28 +32,10 @@
       <!-- care: only with Frappe Health -->
       <template v-if="data.care">
         <p class="eyebrow mb-3 mt-8">{{ t('Care') }}</p>
-        <div class="grid gap-4 lg:grid-cols-2">
-          <Panel :title="t('Waiting today')" :count="data.care.appointments.length || null">
-            <template #actions><RouterLink to="/consultations" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
-            <EmptyState v-if="!data.care.appointments.length" icon="lucide-calendar-check" :title="t('No one waiting')" :text="t('Appointments of the day appear here.')">
-              <Btn icon="lucide-calendar-plus" :label="t('Book an appointment')" @click="openAppointment()" />
-            </EmptyState>
-            <ul v-else class="px-2 pb-2">
-              <li v-for="a in data.care.appointments" :key="a.name" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5">
-                <div class="w-12 shrink-0 text-center font-display text-[19px] leading-none tabular text-ink">{{ a.time }}</div>
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-[14px] font-semibold text-ink">{{ a.patient_name }}</div>
-                  <div class="truncate text-[12.5px] text-ink-mute">{{ a.practitioner_name }}<template v-if="a.notes"> · {{ a.notes }}</template></div>
-                </div>
-                <Btn v-if="!a.consultation" size="sm" variant="brand" :label="t('Start')" :to="{ name: 'consultation', params: { name: 'new' }, query: { patient: a.patient, appointment: a.name } }" />
-                <Btn v-else size="sm" :label="t('Continue')" :to="{ name: 'consultation', params: { name: a.consultation } }" />
-              </li>
-            </ul>
-          </Panel>
+        <div>
           <Panel :title="t('Recent consultations')">
-            <template #actions><RouterLink to="/consultations?tab=history" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
-            <EmptyState v-if="!data.care.consultations.length" icon="lucide-notebook-pen" :title="t('No consultation yet')" :text="t('A consultation records what the doctor found and prescribed.')">
-              <Btn variant="primary" icon="lucide-plus" :label="t('New consultation')" to="/consultations/new" />
+                        <EmptyState v-if="!data.care.consultations.length" icon="lucide-notebook-pen" :title="t('No consultation yet')" :text="t('Open a patient and start a consultation.')">
+              <Btn variant="primary" icon="lucide-users-round" :label="t('Patients')" to="/patients" />
             </EmptyState>
             <ul v-else class="px-2 pb-2">
               <li v-for="c in data.care.consultations" :key="c.name">
@@ -146,7 +128,7 @@ import { get } from '@/api'
 import { t } from '@/i18n'
 import { date, num, shortDate } from '@/format'
 import { session } from '@/session'
-import { ui, openAddStock, openAppointment, openProcedure, openRequest } from '@/ui'
+import { ui, openAddStock, openProcedure, openRequest } from '@/ui'
 
 const data = ref(null)
 const c = computed(() => data.value?.counts || {})
