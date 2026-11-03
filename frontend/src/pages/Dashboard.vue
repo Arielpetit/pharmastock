@@ -43,7 +43,7 @@
                   <Initials :name="c.patient_name" size="sm" />
                   <div class="min-w-0 flex-1">
                     <div class="truncate text-[14px] font-semibold text-ink">{{ c.patient_name }}</div>
-                    <div class="truncate text-[12.5px] text-ink-mute">{{ c.diagnoses[0] || c.symptoms[0] || t('Consultation') }} · {{ shortDate(c.encounter_date) }}</div>
+                    <div class="truncate text-[12.5px] text-ink-mute">{{ c.diagnoses[0] || c.symptoms[0] || t('Consultation') }} · {{ shortDate(c.encounter_date) }}<template v-if="c.time"> · {{ c.time }}</template></div>
                   </div>
                   <StatusBadge :status="c.state" />
                 </RouterLink>
