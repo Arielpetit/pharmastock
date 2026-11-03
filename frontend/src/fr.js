@@ -225,6 +225,7 @@ export default {
   'Expiry date': 'Date d’expiration',
   Cancel: 'Annuler',
   'Save changes': 'Enregistrer',
+  'Date planned': 'Date prévue',
   'Consultation updated': 'Consultation mise à jour',
   'The prescription and the treatments were already ordered, so they cannot be changed here.': 'L’ordonnance et les soins ont déjà été demandés, ils ne peuvent pas être modifiés ici.',
   'Add medicine': 'Ajouter le médicament',

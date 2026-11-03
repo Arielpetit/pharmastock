@@ -384,8 +384,8 @@ def record_procedure(patient, template, items=None, date=None, notes=None, compl
 		{"item_code": r.medicine, "item_name": r.medicine_name, "qty": r.qty, "uom": r.unit, "stock_uom": r.unit,
 		 "conversion_factor": 1, "transfer_qty": r.qty} for r in _item_rows(template, "Clinical Procedure Template")]
 	date = getdate(date or nowdate())
-	if date > getdate():
-		frappe.throw(_("The date cannot be in the future"))
+	if date > getdate() and cint(complete):
+		frappe.throw(_("A treatment that is done cannot have a future date. Plan it for that day instead."))
 	if service_request:  # a treatment the doctor asked for in a consultation
 		sr = frappe.db.get_value("Service Request", service_request, ["patient", "template_dn", "docstatus", "status"], as_dict=True)
 		if not sr or sr.patient != patient or sr.template_dn != template or sr.docstatus != 1:
@@ -414,6 +414,9 @@ def complete_procedure(name):
 	cp = frappe.get_doc("Clinical Procedure", name)
 	if cp.docstatus != 1 or cp.status == "Cancelled":
 		frappe.throw(_("This treatment was cancelled"))
+	if cp.status != "Completed":  # it happens today, whatever day it was planned for
+		cp.db_set("start_date", getdate())
+		cp.start_date = getdate()
 	return {"name": cp.name, "stock_entry": _complete(cp)}
 
 
