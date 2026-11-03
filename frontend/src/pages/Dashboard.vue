@@ -77,36 +77,44 @@
         </div>
       </template>
 
-      <p v-if="data.care" class="eyebrow mb-3 mt-8">{{ t('Pharmacy') }}</p>
-      <div class="grid gap-4 lg:grid-cols-2" :class="data.care ? '' : 'mt-4'">
-        <Panel :title="t('Needs attention')">
-          <template #actions><RouterLink to="/medicines?status=low" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
-          <EmptyState v-if="!attention.length" icon="lucide-circle-check" :title="t('All good')" :text="t('Nothing to restock and nothing expiring.')" />
-          <ul v-else class="px-2 pb-2">
-            <li v-for="a in attention" :key="a.key">
-              <RouterLink :to="`/medicines/${encodeURIComponent(a.code)}`" class="flex items-center gap-3 rounded-[12px] px-3 py-3 transition hover:bg-paper">
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-[14px] font-semibold text-ink">{{ a.name }}</div>
-                  <div class="mt-0.5 text-[12.5px] text-ink-mute">{{ a.detail }}</div>
-                </div>
-                <span class="shrink-0 text-[13px] font-medium text-alert">{{ a.tag }}</span>
-              </RouterLink>
-            </li>
-          </ul>
-        </Panel>
+      <div :class="data.care ? 'mt-8' : 'mt-4'">
+        <Panel>
+          <div class="flex items-center justify-between gap-2 px-5 pb-1 pt-3">
+            <div class="flex gap-1" role="tablist">
+              <button v-for="x in tabs" :key="x.id" role="tab" :aria-selected="tab === x.id" type="button"
+                class="rounded-full px-3.5 py-1.5 text-[14px] font-semibold transition"
+                :class="tab === x.id ? 'bg-paper text-ink' : 'text-ink-mute hover:text-ink'" @click="tab = x.id">{{ x.label }}</button>
+            </div>
+            <RouterLink :to="tab === 'attention' ? '/medicines?status=low' : '/reports'" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink>
+          </div>
 
-        <Panel :title="t('Recent movements')">
-          <template #actions><RouterLink to="/reports" class="text-[13px] font-medium text-ink-mute hover:text-ink">{{ t('See all') }}</RouterLink></template>
-          <EmptyState v-if="!data.recent.length" icon="lucide-arrow-left-right" :title="t('No movements yet')" :text="t('Stock you add or give out appears here.')" />
-          <ul v-else class="px-2 pb-2">
-            <li v-for="(m, i) in data.recent.slice(0, 5)" :key="i" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2"><span class="truncate text-[14px] font-semibold text-ink">{{ m.medicine_name }}</span><CancelledTag v-if="m.cancelled" /></div>
-                <div class="truncate text-[12.5px] text-ink-mute">{{ t(m.reason) }} · {{ shortDate(m.date) }}</div>
-              </div>
-              <div class="font-display text-[19px] leading-none text-ink tabular" :class="m.cancelled && 'line-through opacity-50'">{{ m.direction === 'in' ? '+' : '−' }}{{ num(m.qty) }}</div>
-            </li>
-          </ul>
+          <template v-if="tab === 'attention'">
+            <EmptyState v-if="!attention.length" icon="lucide-circle-check" :title="t('All good')" :text="t('Nothing to restock and nothing expiring.')" />
+            <ul v-else class="px-2 pb-2">
+              <li v-for="a in attention" :key="a.key">
+                <RouterLink :to="`/medicines/${encodeURIComponent(a.code)}`" class="flex items-center gap-3 rounded-[12px] px-3 py-3 transition hover:bg-paper">
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate text-[14px] font-semibold text-ink">{{ a.name }}</div>
+                    <div class="mt-0.5 text-[12.5px] text-ink-mute">{{ a.detail }}</div>
+                  </div>
+                  <span class="shrink-0 text-[13px] font-medium text-alert">{{ a.tag }}</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </template>
+
+          <template v-else>
+            <EmptyState v-if="!data.recent.length" icon="lucide-arrow-left-right" :title="t('No movements yet')" :text="t('Stock you add or give out appears here.')" />
+            <ul v-else class="px-2 pb-2">
+              <li v-for="(m, i) in data.recent.slice(0, 5)" :key="i" class="flex items-center gap-3 rounded-[12px] px-3 py-2.5">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2"><span class="truncate text-[14px] font-semibold text-ink">{{ m.medicine_name }}</span><CancelledTag v-if="m.cancelled" /></div>
+                  <div class="truncate text-[12.5px] text-ink-mute">{{ t(m.reason) }} · {{ shortDate(m.date) }}</div>
+                </div>
+                <div class="font-display text-[19px] leading-none text-ink tabular" :class="m.cancelled && 'line-through opacity-50'">{{ m.direction === 'in' ? '+' : '−' }}{{ num(m.qty) }}</div>
+              </li>
+            </ul>
+          </template>
         </Panel>
       </div>
     </template>
@@ -130,6 +138,8 @@ import { session } from '@/session'
 import { ui, openAddStock, openProcedure, openRequest } from '@/ui'
 
 const data = ref(null)
+const tab = ref('attention')
+const tabs = computed(() => [{ id: 'attention', label: t('Needs attention') }, { id: 'movements', label: t('Recent movements') }])
 const c = computed(() => data.value?.counts || {})
 const firstName = computed(() => (session.user.full_name || '').split(' ')[0])
 const greeting = computed(() => {
